@@ -457,10 +457,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8190029701e6c984aa89e35cb03dcb23, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  turnoActual: 1
+  manaPorTurno: 3
+  jugador1: {fileID: 1892422406}
+  jugador2: {fileID: 1611705956}
   textoTurno: {fileID: 1952517895}
   contadorTurno: {fileID: 1680178365}
-  jugador1: {fileID: 1892422406}
 --- !u!4 &109104152
 Transform:
   m_ObjectHideFlags: 0
@@ -505,6 +506,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 981798fff1a96d241bdecdf5458806a2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  catalog: {fileID: 11400000, guid: 72d04b0a5c334711a7cca229568944c5, type: 2}
 --- !u!4 &226135197
 Transform:
   m_ObjectHideFlags: 0
@@ -817,8 +819,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0fe22380e89dd264b88fa28d9ae28d31, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::LogicaPartida
-  jugador1: {fileID: 0}
-  jugardor2: {fileID: 0}
+  jugador1: {fileID: 1892422406}
+  jugador2: {fileID: 1611705956}
 --- !u!4 &375855611
 Transform:
   m_ObjectHideFlags: 0
@@ -1065,7 +1067,6 @@ RectTransform:
   m_LocalScale: {x: 0, y: 0, z: 0}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 1677451798}
   - {fileID: 1819482273}
   - {fileID: 234229676}
   - {fileID: 764435264}
@@ -1075,6 +1076,8 @@ RectTransform:
   - {fileID: 75905768}
   - {fileID: 997508603}
   - {fileID: 1933383470}
+  - {fileID: 1274885153}
+  - {fileID: 1030975174}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
@@ -1462,7 +1465,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3360394add1cd004789b09aecfcdacf0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  baraja: []
+  catalog: {fileID: 0}
   deckSize: 10
   cardInDeck1: {fileID: 717095544}
   cardInDeck2: {fileID: 548236121}
@@ -1744,13 +1747,13 @@ RectTransform:
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 0.57188, y: 0.57188, z: 0.57188}
-  m_ConstrainProportionsScale: 0
+  m_ConstrainProportionsScale: 1
   m_Children: []
-  m_Father: {fileID: 1611705957}
+  m_Father: {fileID: 535891232}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -386.6112, y: -1.019165}
+  m_AnchoredPosition: {x: -852, y: 230}
   m_SizeDelta: {x: 379.3679, y: 93.7104}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &1061993499
@@ -1959,7 +1962,7 @@ GameObject:
   - component: {fileID: 1274885154}
   - component: {fileID: 1274885152}
   m_Layer: 5
-  m_Name: PanelPlayerDeck
+  m_Name: PanelPlayerDeckOp
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1977,7 +1980,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3360394add1cd004789b09aecfcdacf0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  baraja: []
+  catalog: {fileID: 0}
   deckSize: 10
   cardInDeck1: {fileID: 754983977}
   cardInDeck2: {fileID: 1645252965}
@@ -1991,15 +1994,15 @@ RectTransform:
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 0.57188, y: 0.57188, z: 0.57188}
-  m_ConstrainProportionsScale: 0
+  m_ConstrainProportionsScale: 1
   m_Children:
   - {fileID: 754983978}
   - {fileID: 1645252971}
-  m_Father: {fileID: 1611705957}
+  m_Father: {fileID: 535891232}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 1, y: 0}
   m_AnchorMax: {x: 1, y: 0}
-  m_AnchoredPosition: {x: 435.54675, y: -159.33228}
+  m_AnchoredPosition: {x: -1788, y: 793}
   m_SizeDelta: {x: 450.56494, y: 313.6526}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1274885154
@@ -2070,8 +2073,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   barajaMonstruosJugador: {fileID: 1274885152}
-  contadorMana: {fileID: 1030975172}
   tablero: {fileID: 234229677}
+  contadorMana: {fileID: 1030975172}
 --- !u!4 &1611705957
 Transform:
   m_ObjectHideFlags: 0
@@ -2084,9 +2087,7 @@ Transform:
   m_LocalPosition: {x: 533.6112, y: 249.01918, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children:
-  - {fileID: 1274885153}
-  - {fileID: 1030975174}
+  m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1645252965 stripped
@@ -2204,65 +2205,6 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 726d6f9c38aa9e343bfc03297bb8fa57, type: 3}
---- !u!1 &1677451797
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1677451798}
-  - component: {fileID: 1677451799}
-  m_Layer: 0
-  m_Name: DisplayCard
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &1677451798
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1677451797}
-  serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 89.04523, y: -29.99208, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 535891232}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1677451799
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1677451797}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: aab9b982041cf1f48ac68c1b3b86e27b, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  displayId: 0
-  id: 0
-  ataque: 0
-  curar: 0
-  costemana: 0
-  rango: 0
-  vida: 0
-  nombre: 
-  spriteImage: {fileID: 0}
-  textonombre: {fileID: 0}
-  numataque: {fileID: 0}
-  nummana: {fileID: 0}
-  numcura: {fileID: 0}
-  numvida: {fileID: 0}
-  artImage: {fileID: 0}
 --- !u!1 &1680178364
 GameObject:
   m_ObjectHideFlags: 0
@@ -2447,8 +2389,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   barajaMonstruosJugador: {fileID: 764435267}
-  contadorMana: {fileID: 997508604}
   tablero: {fileID: 869782426}
+  contadorMana: {fileID: 997508604}
 --- !u!4 &1892422407
 Transform:
   m_ObjectHideFlags: 0
