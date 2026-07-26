@@ -1,0 +1,95 @@
+# ---------------------------------------------------------------------
+# Normalización de finales de línea
+# ---------------------------------------------------------------------
+# El proyecto se edita desde Windows (Unity) y WSL (herramientas CLI).
+# Se deja que git detecte texto vs binario automáticamente, sin forzar
+# conversiones sobre ficheros ya existentes.
+* text=auto
+
+# ---------------------------------------------------------------------
+# Ficheros de texto de Unity (YAML serializado)
+# ---------------------------------------------------------------------
+# Marcados explícitamente como texto para que los diffs sean legibles.
+# 'merge=unityyamlmerge' activa la herramienta de merge de Unity si se
+# configura (ver README). Sin configurar, git usa el merge normal.
+*.cs                text diff=csharp
+*.shader            text
+*.cginc             text
+*.hlsl              text
+*.compute           text
+*.json              text
+*.md                text
+*.txt               text
+*.xml               text
+*.yml               text
+*.asmdef            text
+*.asmref            text
+
+*.meta              text merge=unityyamlmerge eol=lf
+*.unity             text merge=unityyamlmerge eol=lf
+*.prefab            text merge=unityyamlmerge eol=lf
+*.asset             text merge=unityyamlmerge eol=lf
+*.mat               text merge=unityyamlmerge eol=lf
+*.anim              text merge=unityyamlmerge eol=lf
+*.controller        text merge=unityyamlmerge eol=lf
+*.overrideController text merge=unityyamlmerge eol=lf
+*.physicMaterial    text merge=unityyamlmerge eol=lf
+*.physicsMaterial2D text merge=unityyamlmerge eol=lf
+*.playable          text merge=unityyamlmerge eol=lf
+*.mask              text merge=unityyamlmerge eol=lf
+*.brush             text merge=unityyamlmerge eol=lf
+*.flare             text merge=unityyamlmerge eol=lf
+*.fontsettings      text merge=unityyamlmerge eol=lf
+*.guiskin           text merge=unityyamlmerge eol=lf
+*.giparams          text merge=unityyamlmerge eol=lf
+*.renderTexture     text merge=unityyamlmerge eol=lf
+*.spriteatlas       text merge=unityyamlmerge eol=lf
+*.terrainlayer      text merge=unityyamlmerge eol=lf
+*.mixer             text merge=unityyamlmerge eol=lf
+*.shadergraph       text merge=unityyamlmerge eol=lf
+*.shadersubgraph    text merge=unityyamlmerge eol=lf
+*.scenetemplate     text merge=unityyamlmerge eol=lf
+*.inputactions      text merge=unityyamlmerge eol=lf
+
+# ---------------------------------------------------------------------
+# Binarios
+# ---------------------------------------------------------------------
+# Marcados como binarios para evitar corrupción por conversión de EOL
+# y para que git no intente generar diffs de texto.
+*.png               binary
+*.jpg               binary
+*.jpeg              binary
+*.gif               binary
+*.psd               binary
+*.ai                binary
+*.tif               binary
+*.tga               binary
+*.exr               binary
+*.hdr               binary
+*.aseprite          binary
+*.ase               binary
+
+*.mp3               binary
+*.ogg               binary
+*.wav               binary
+*.aif               binary
+
+*.fbx               binary
+*.obj               binary
+*.blend             binary
+*.dae               binary
+*.3ds               binary
+
+*.ttf               binary
+*.otf               binary
+
+*.dll               binary
+*.so                binary
+*.dylib             binary
+*.pdb               binary
+*.mdb               binary
+
+*.zip               binary
+*.7z                binary
+*.rar               binary
+*.unitypackage      binary
