@@ -1,70 +1,98 @@
-// DraggableCard.cs
 using UnityEngine;
 using UnityEngine.EventSystems;
 
-[RequireComponent(typeof(CanvasGroup), typeof(RectTransform))]
+/// <summary>
+/// Permite arrastrar una carta desde la mano hasta la arena.
+/// </summary>
+/// <remarks>
+/// TRANSITORIO (Fase 1). Antes <c>Awake()</c> hacía <c>return</c> antes de
+/// cachear el RectTransform, el CanvasGroup y el Canvas si en ese instante no
+/// era el turno del jugador 1. Esas referencias se quedaban a null PARA SIEMPRE,
+/// y el primer arrastre posterior lanzaba NullReferenceException. Un filtro de
+/// turno no puede ir nunca en <c>Awake()</c>.
+///
+/// Además el prefab no tenía CanvasGroup pese a declararlo en RequireComponent,
+/// y sin <c>blocksRaycasts = false</c> el carril de debajo no llega a recibir el
+/// evento de soltado.
+///
+/// La validación de si la carta se puede jugar (turno, propietario, maná, orden
+/// de carriles) la hace <see cref="BoardSlot"/> al soltar. En la Fase 3 se
+/// añadirá el filtro previo para no dejar ni siquiera arrastrar una carta que no
+/// es tuya.
+/// </remarks>
+[RequireComponent(typeof(RectTransform))]
 public class DraggableCard : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler
 {
-    RectTransform _rect;
-    CanvasGroup   _group;
-    Canvas        _canvas;
-    Transform     _originalParent;
-    Vector2       _originalAnchoredPos;
-    Vector3       _originalScale;
-    bool          _droppedInSlot;
+    private RectTransform _rect;
+    private CanvasGroup _group;
+    private Canvas _canvas;
 
-    void Awake()
+    private Transform _originalParent;
+    private Vector2 _originalAnchoredPos;
+    private Vector3 _originalScale;
+    private bool _droppedInSlot;
+
+    private void Awake()
     {
-        if (!SistemaTurnos.turnoJugador1) return;
-        _rect          = GetComponent<RectTransform>();
-        _group         = GetComponent<CanvasGroup>();
-        _canvas        = GetComponentInParent<Canvas>();
+        _rect = GetComponent<RectTransform>();
+        _canvas = GetComponentInParent<Canvas>();
         _originalScale = transform.localScale;
+
+        // El prefab puede no traer CanvasGroup; sin él no se pueden desactivar
+        // los raycasts durante el arrastre y el carril nunca recibiría el drop.
+        if (!TryGetComponent(out _group))
+        {
+            _group = gameObject.AddComponent<CanvasGroup>();
+        }
     }
 
-    public void OnBeginDrag(PointerEventData e)
+    public void OnBeginDrag(PointerEventData eventData)
     {
-        if (!SistemaTurnos.turnoJugador1) return;
-        // Guardamos parent, posición y scale
-        _originalParent      = transform.parent;
+        if (_canvas == null)
+        {
+            Debug.LogError("[DraggableCard] La carta no está dentro de un Canvas.", this);
+            return;
+        }
+
+        _originalParent = transform.parent;
         _originalAnchoredPos = _rect.anchoredPosition;
-        _droppedInSlot       = false;
+        _originalScale = transform.localScale;
+        _droppedInSlot = false;
 
-        // Feedback visual
         _group.blocksRaycasts = false;
-        _group.alpha          = 0.6f;
+        _group.alpha = 0.6f;
 
-        // Lo subimos encima de todo en el Canvas
+        // Por encima del resto de la interfaz mientras se arrastra.
         transform.SetParent(_canvas.transform, worldPositionStays: true);
         transform.SetAsLastSibling();
     }
 
-    public void OnDrag(PointerEventData e)
+    public void OnDrag(PointerEventData eventData)
     {
-        if (!SistemaTurnos.turnoJugador1) return;
-        // Seguir el ratón
-        _rect.anchoredPosition += e.delta / _canvas.scaleFactor;
-    }
-
-    public void OnEndDrag(PointerEventData e)
-    {
-        if (!SistemaTurnos.turnoJugador1) return;
-        // Restaurar raycasts y opacidad
-        _group.blocksRaycasts = true;
-        _group.alpha          = 1f;
-
-        if (!_droppedInSlot)
+        if (_canvas == null)
         {
-            // Si no cayó en un slot, devolvemos todo
-            transform.SetParent(_originalParent, worldPositionStays: false);
-            _rect.anchoredPosition = _originalAnchoredPos;
-            transform.localScale   = _originalScale;
+            return;
         }
+
+        _rect.anchoredPosition += eventData.delta / _canvas.scaleFactor;
     }
 
-    // Llamado por BoardSlot para confirmar que aquí sí cayó
-    public void MarkAsDropped()
+    public void OnEndDrag(PointerEventData eventData)
     {
-        _droppedInSlot = true;
+        _group.blocksRaycasts = true;
+        _group.alpha = 1f;
+
+        if (_droppedInSlot)
+        {
+            return;
+        }
+
+        // No cayó en ningún carril válido: vuelve a su sitio en la mano.
+        transform.SetParent(_originalParent, worldPositionStays: false);
+        _rect.anchoredPosition = _originalAnchoredPos;
+        transform.localScale = _originalScale;
     }
+
+    /// <summary>Lo llama <see cref="BoardSlot"/> cuando acepta la carta.</summary>
+    public void MarkAsDropped() => _droppedInSlot = true;
 }

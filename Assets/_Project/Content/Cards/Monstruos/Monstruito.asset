@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe03ed427a0549bb895c9ffbfa57d04b, type: 3}
+  m_Name: Monstruito
+  m_EditorClassIdentifier: 
+  displayName: Monstruito
+  artwork: {fileID: -2390279811801854476, guid: c65725974d2fe2041aa9b987a6665211, type: 3}
+  rarity: 1
+  manaCost: 4
+  maxHealth: 6
+  attack: 2
+  healPerTurn: 1
+  canAttackMelee: 1
+  canAttackRanged: 0

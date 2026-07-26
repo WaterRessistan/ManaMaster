@@ -1,23 +1,37 @@
-using System.Collections;
-using System.Collections.Generic;
+using ManaMaster.Core.Cards;
 using UnityEngine;
 
-public class CardDatabase : MonoBehaviour 
+/// <summary>
+/// Expone el catálogo de cartas a los componentes de la escena.
+/// </summary>
+/// <remarks>
+/// TRANSITORIO (Fase 1). Antes este componente construía una
+/// <c>static List&lt;Cartas&gt;</c> en <c>Awake()</c> con las 11 cartas escritas
+/// a mano y cargaba los sprites por nombre desde <c>Resources</c>. Eso provocaba
+/// tres fallos: la lista se duplicaba al recargar la escena (por ser estática),
+/// tres rutas de sprite no existían y fallaban en silencio, y todas las copias
+/// de una carta compartían el mismo objeto de datos.
+///
+/// Ahora las cartas son assets (<see cref="MonsterCardDefinition"/>) reunidos en
+/// un <see cref="CardCatalog"/>, y este componente solo sirve de punto de acceso
+/// desde la escena. En la Fase 2 lo sustituirá la inyección desde el
+/// MatchController.
+/// </remarks>
+public class CardDatabase : MonoBehaviour
 {
-    public static List<Cartas> cardList = new List<Cartas>();
+    [Tooltip("Asignar Assets/_Project/Content/Cards/CardCatalog.asset")]
+    [SerializeField] private CardCatalog catalog;
 
-    void Awake()
+    public CardCatalog Catalog => catalog;
+
+    private void Awake()
     {
-        cardList.Add(new Cartas(0, "None", 0, 0, 0, false, 0, Resources.Load<Sprite>("tras")));
-        cardList.Add(new Cartas(1, "Baraja", 1, 0, 1, false, 2, Resources.Load<Sprite>("m1")));
-        cardList.Add(new Cartas(2, "Monstruo", 3, 0, 2, false, 5, Resources.Load<Sprite>("m2")));
-        cardList.Add(new Cartas(3, "Monstruito", 2, 1, 4, false, 6, Resources.Load<Sprite>("m3")));
-        cardList.Add(new Cartas(4, "Fantasma", 3, 0, 2, false, 4, Resources.Load<Sprite>("m4")));
-        cardList.Add(new Cartas(5, "Link", 2, 1, 2, false, 8, Resources.Load<Sprite>("m5")));
-        cardList.Add(new Cartas(6, "Zombie", 1, 0, 1, false, 2, Resources.Load<Sprite>("m6")));
-        cardList.Add(new Cartas(7, "Fantasmon", 2, 1, 2, false, 3, Resources.Load<Sprite>("m7")));
-        cardList.Add(new Cartas(8, "Golem", 3, 0, 2, false, 4, Resources.Load<Sprite>("m8")));
-        cardList.Add(new Cartas(9, "Azul", 2, 1, 2, false, 8, Resources.Load<Sprite>("azul")));
-        cardList.Add(new Cartas(10, "Perro rojo", 2, 1, 2, false, 8, Resources.Load<Sprite>("perrorojo")));
+        if (catalog == null)
+        {
+            Debug.LogError(
+                "[CardDatabase] No hay ningún CardCatalog asignado. Arrastra " +
+                "Assets/_Project/Content/Cards/CardCatalog.asset al Inspector " +
+                "de este componente.", this);
+        }
     }
 }

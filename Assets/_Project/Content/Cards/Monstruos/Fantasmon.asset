@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe03ed427a0549bb895c9ffbfa57d04b, type: 3}
+  m_Name: Fantasmon
+  m_EditorClassIdentifier: 
+  displayName: Fantasmón
+  artwork: {fileID: 8465457071407006362, guid: 68e05207a8e97394ab09573254b69c0e, type: 3}
+  rarity: 1
+  manaCost: 2
+  maxHealth: 3
+  attack: 2
+  healPerTurn: 1
+  canAttackMelee: 0
+  canAttackRanged: 1

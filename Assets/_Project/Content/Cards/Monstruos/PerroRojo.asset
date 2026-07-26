@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe03ed427a0549bb895c9ffbfa57d04b, type: 3}
+  m_Name: PerroRojo
+  m_EditorClassIdentifier: 
+  displayName: Perro rojo
+  artwork: {fileID: -3849440367951639903, guid: 9f8e6fd869533c640aa173834f6c3198, type: 3}
+  rarity: 1
+  manaCost: 2
+  maxHealth: 8
+  attack: 2
+  healPerTurn: 1
+  canAttackMelee: 0
+  canAttackRanged: 1

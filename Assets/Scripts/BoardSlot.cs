@@ -1,62 +1,146 @@
-// BoardSlot.cs
+using ManaMaster.Core.Board;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
+/// <summary>
+/// Un carril de la arena. Acepta que se suelte una carta sobre él.
+/// </summary>
+/// <remarks>
+/// TRANSITORIO (Fase 1). Antes cualquier carril aceptaba cualquier carta: no
+/// sabía a qué jugador pertenecía, así que se podían soltar cartas en el tablero
+/// del rival, y descontaba el maná del primer <c>Jugador</c> que encontrase en la
+/// escena con <c>FindObjectOfType</c>.
+///
+/// Ahora conoce su tablero y su índice de carril, valida el propietario y exige
+/// que los carriles se llenen en orden.
+///
+/// FASE 2: la inserción con empuje (colocar delante de otra carta y desplazarla
+/// hacia atrás) y la compactación al morir un monstruo se resolverán en el
+/// dominio; este componente pasará a ser solo la zona de soltado.
+/// </remarks>
 [RequireComponent(typeof(RectTransform))]
 public class BoardSlot : MonoBehaviour, IDropHandler
 {
-    public void OnDrop(PointerEventData e)
+    private Tablero _tablero;
+    private int _laneIndex = -1;
+    private SistemaTurnos _turnos;
+
+    /// <summary>Índice de carril: 0 = principal, 1 y 2 = traseros.</summary>
+    public int LaneIndex => _laneIndex;
+
+    public Tablero Tablero => _tablero;
+
+    /// <summary>Llamado por <see cref="Tablero"/> al inicializarse.</summary>
+    public void Configurar(Tablero tablero, int laneIndex)
     {
-        if (IsOccupied() || (!SistemaTurnos.turnoJugador1)) return; // Si ya está ocupado o no es el turno del jugador 1, no hacemos nada
+        _tablero = tablero;
+        _laneIndex = laneIndex;
+    }
 
-        var dragged = e.pointerDrag;
-        if (dragged == null) return;
+    public bool IsOccupied() => transform.childCount > 0;
 
-        // comprobamos que tenemos mana suficiente para jugar la carta
-        var displayCard = dragged.GetComponent<DisplayCard>();
-        if (displayCard == null)
+    public void OnDrop(PointerEventData eventData)
+    {
+        GameObject arrastrada = eventData.pointerDrag;
+        if (arrastrada == null)
         {
-            Debug.LogWarning("No se encontró el componente DisplayCard en la carta arrastrada.");
             return;
         }
-        if (displayCard.costemana > Jugador.mana)
+
+        if (!PuedeAceptarCarta(arrastrada, out DisplayCard carta, out Jugador propietario))
         {
-            Debug.LogWarning("No tienes suficiente mana para jugar esta carta.");
             return;
         }
-        else
+
+        if (!propietario.TryGastarMana(carta.CosteMana))
         {
-            Jugador.mana -= displayCard.costemana; // Restamos el mana gastado
-            Jugador jugador = FindObjectOfType<Jugador>();  //no me convence, que busca el primer jugador que encuentra
-            if (jugador != null)
-            {
-                jugador.ActualizarMana(); // Actualizamos el contador de mana
-            }
-            else
-            {
-                Debug.LogWarning("No se encontró un objeto Jugador en la escena.");
-            }
+            Debug.Log($"[BoardSlot] Maná insuficiente: la carta cuesta " +
+                      $"{carta.CosteMana} y hay {propietario.Mana}.");
+            return;
         }
 
-        // 1) Avisamos a la carta que aquí se ha soltado
-        var dragComp = dragged.GetComponent<DraggableCard>();
-        if (dragComp != null) dragComp.MarkAsDropped();
-
-        // 2) Reparent manteniendo posición/escala/rotación mundiales
-        dragged.transform.SetParent(transform, worldPositionStays: true);
-
-        // 3) Ajustamos su posición global al centro del slot
-        var rtDragged = dragged.GetComponent<RectTransform>();
-        var rtThis = GetComponent<RectTransform>();
-        rtDragged.position = rtThis.position;
-
-        // 4) Aseguramos la escala original (en caso de que algo la cambie)
-        if (dragComp != null)
-            dragged.transform.localScale = dragComp.transform.localScale;
-
+        ColocarCarta(arrastrada);
     }
-    public bool IsOccupied()
+
+    private bool PuedeAceptarCarta(
+        GameObject arrastrada, out DisplayCard carta, out Jugador propietario)
     {
-        return transform.childCount > 0;
+        carta = null;
+        propietario = null;
+
+        if (_tablero == null || !BoardLanes.IsValid(_laneIndex))
+        {
+            Debug.LogError("[BoardSlot] Carril sin configurar por su Tablero.", this);
+            return false;
+        }
+
+        if (IsOccupied())
+        {
+            return false;
+        }
+
+        carta = arrastrada.GetComponent<DisplayCard>();
+        if (carta == null || !carta.TieneCarta)
+        {
+            Debug.LogWarning("[BoardSlot] El objeto arrastrado no es una carta válida.");
+            return false;
+        }
+
+        propietario = _tablero.Propietario;
+        if (propietario == null)
+        {
+            Debug.LogError("[BoardSlot] El tablero no tiene propietario asignado.", this);
+            return false;
+        }
+
+        // Antes faltaba esta comprobación: se podían soltar cartas en el
+        // tablero del rival.
+        if (Turnos != null && Turnos.JugadorActivo != propietario)
+        {
+            Debug.Log("[BoardSlot] No es tu turno, o este no es tu tablero.");
+            return false;
+        }
+
+        // Los carriles se llenan en orden: no se puede ocupar el 3 sin que el
+        // 1 y el 2 lo estén.
+        int primerLibre = _tablero.PrimerCarrilLibre();
+        if (primerLibre < 0)
+        {
+            Debug.Log("[BoardSlot] La arena ya tiene los 3 monstruos desplegados.");
+            return false;
+        }
+
+        if (_laneIndex != primerLibre)
+        {
+            Debug.Log($"[BoardSlot] Hay que llenar los carriles en orden: " +
+                      $"toca el {BoardLanes.ToDisplayName(primerLibre)}.");
+            return false;
+        }
+
+        return true;
     }
+
+    private void ColocarCarta(GameObject arrastrada)
+    {
+        if (arrastrada.TryGetComponent(out DraggableCard draggable))
+        {
+            draggable.MarkAsDropped();
+        }
+
+        arrastrada.transform.SetParent(transform, worldPositionStays: true);
+
+        RectTransform rectCarta = arrastrada.GetComponent<RectTransform>();
+        RectTransform rectSlot = (RectTransform)transform;
+        if (rectCarta != null)
+        {
+            rectCarta.position = rectSlot.position;
+        }
+    }
+
+    /// <summary>
+    /// TRANSITORIO: búsqueda perezosa del sistema de turnos. En la Fase 2 el
+    /// MatchController inyectará esta dependencia y desaparecerá el Find.
+    /// </summary>
+    private SistemaTurnos Turnos
+        => _turnos != null ? _turnos : _turnos = FindFirstObjectByType<SistemaTurnos>();
 }
