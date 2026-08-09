@@ -31,6 +31,9 @@ public class PlayerDeck : MonoBehaviour
     [SerializeField] private GameObject cardInDeck1;
     [SerializeField] private GameObject cardInDeck2;
 
+    /// <summary>Copias máximas de una misma carta en un mazo (DESIGN.md §8).</summary>
+    private const int MaxCopiasPorCarta = 2;
+
     private readonly List<CardInstance> _baraja = new();
 
     /// <summary>Cartas que quedan por robar.</summary>
@@ -58,19 +61,42 @@ public class PlayerDeck : MonoBehaviour
             return;
         }
 
-        // Copia barajable de las definiciones disponibles.
-        List<MonsterCardDefinition> disponibles = new(catalogo.Monsters);
-        Barajar(disponibles);
+        // Reserva con como mucho MaxCopiasPorCarta de cada carta. Antes se
+        // recorría el catálogo con `i % disponibles.Count`, que con el catálogo
+        // actual de 10 monstruos daba exactamente una copia de cada uno por pura
+        // coincidencia, y repartía 3 o más copias en cuanto el catálogo cambiaba
+        // de tamaño. Al limitar la reserva, barajarla y cortar por deckSize, el
+        // máximo se respeta por construcción.
+        List<MonsterCardDefinition> reserva = new();
+        foreach (MonsterCardDefinition definicion in catalogo.Monsters)
+        {
+            if (definicion == null)
+            {
+                continue;
+            }
+
+            for (int copia = 0; copia < MaxCopiasPorCarta; copia++)
+            {
+                reserva.Add(definicion);
+            }
+        }
+
+        Barajar(reserva);
+
+        int cartasARepartir = Mathf.Min(deckSize, reserva.Count);
+        if (cartasARepartir < deckSize)
+        {
+            Debug.LogWarning(
+                $"[PlayerDeck] El catálogo solo da para {reserva.Count} cartas " +
+                $"con un máximo de {MaxCopiasPorCarta} copias, y el mazo pide " +
+                $"{deckSize}. Se reparten {cartasARepartir}.", this);
+        }
 
         // Se instancia una CardInstance por carta: cada copia tiene su propia
         // vida y dañar una en partida ya no altera el asset compartido.
-        for (int i = 0; i < deckSize; i++)
+        for (int i = 0; i < cartasARepartir; i++)
         {
-            MonsterCardDefinition definicion = disponibles[i % disponibles.Count];
-            if (definicion != null)
-            {
-                _baraja.Add(new CardInstance(definicion));
-            }
+            _baraja.Add(new CardInstance(reserva[i]));
         }
     }
 

@@ -59,7 +59,16 @@ public class BoardSlot : MonoBehaviour, IDropHandler
             return;
         }
 
-        ColocarCarta(arrastrada);
+        DesplegarCopiaEnCarril(carta);
+
+        // Antes se movía al carril el propio objeto de la mano, así que el hueco
+        // desaparecía para siempre: tras jugar dos cartas te quedabas sin mano el
+        // resto de la partida. Ahora al carril va una copia, y el original vuelve
+        // a la mano para que la baraja lo reponga.
+        if (arrastrada.TryGetComponent(out DraggableCard arrastrable))
+        {
+            arrastrable.MarcarComoJugada(propietario.Baraja);
+        }
     }
 
     private bool PuedeAceptarCarta(
@@ -120,20 +129,40 @@ public class BoardSlot : MonoBehaviour, IDropHandler
         return true;
     }
 
-    private void ColocarCarta(GameObject arrastrada)
+    /// <summary>
+    /// Crea en este carril la carta desplegada, a partir de la que se arrastró
+    /// desde la mano.
+    /// </summary>
+    private void DesplegarCopiaEnCarril(DisplayCard origen)
     {
-        if (arrastrada.TryGetComponent(out DraggableCard draggable))
+        GameObject copia = Instantiate(origen.gameObject, transform);
+        copia.name = origen.gameObject.name;
+
+        // Una carta ya desplegada no se vuelve a arrastrar.
+        if (copia.TryGetComponent(out DraggableCard arrastrable))
         {
-            draggable.MarkAsDropped();
+            Destroy(arrastrable);
         }
 
-        arrastrada.transform.SetParent(transform, worldPositionStays: true);
-
-        RectTransform rectCarta = arrastrada.GetComponent<RectTransform>();
-        RectTransform rectSlot = (RectTransform)transform;
-        if (rectCarta != null)
+        // Instantiate copia los campos serializados, pero no el estado de
+        // ejecución: hay que reasignar la instancia de partida para que la copia
+        // comparta la vida actual del monstruo y no una carta vacía.
+        if (copia.TryGetComponent(out DisplayCard vista))
         {
-            rectCarta.position = rectSlot.position;
+            vista.Mostrar(origen.Carta);
+        }
+
+        // El original está a media transparencia y sin raycasts porque se está
+        // arrastrando; la copia no debe heredar ese estado.
+        if (copia.TryGetComponent(out CanvasGroup grupo))
+        {
+            grupo.alpha = 1f;
+            grupo.blocksRaycasts = true;
+        }
+
+        if (copia.transform is RectTransform rectCopia)
+        {
+            rectCopia.position = ((RectTransform)transform).position;
         }
     }
 

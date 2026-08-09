@@ -30,7 +30,15 @@ public class DraggableCard : MonoBehaviour, IBeginDragHandler, IDragHandler, IEn
     private Transform _originalParent;
     private Vector2 _originalAnchoredPos;
     private Vector3 _originalScale;
-    private bool _droppedInSlot;
+
+    /// <summary>
+    /// Baraja que debe reponer este hueco de la mano cuando termine el arrastre,
+    /// o null si la carta no llegó a jugarse. La reposición no puede hacerse en
+    /// el momento del soltado: si la baraja está vacía desactiva el objeto, y
+    /// desactivarlo a mitad de arrastre impide que llegue a ejecutarse el resto
+    /// de <see cref="OnEndDrag"/>.
+    /// </summary>
+    private PlayerDeck _barajaAReponer;
 
     private void Awake()
     {
@@ -57,7 +65,7 @@ public class DraggableCard : MonoBehaviour, IBeginDragHandler, IDragHandler, IEn
         _originalParent = transform.parent;
         _originalAnchoredPos = _rect.anchoredPosition;
         _originalScale = transform.localScale;
-        _droppedInSlot = false;
+        _barajaAReponer = null;
 
         _group.blocksRaycasts = false;
         _group.alpha = 0.6f;
@@ -82,17 +90,28 @@ public class DraggableCard : MonoBehaviour, IBeginDragHandler, IDragHandler, IEn
         _group.blocksRaycasts = true;
         _group.alpha = 1f;
 
-        if (_droppedInSlot)
+        // Esta carta vuelve SIEMPRE a la mano: lo que se despliega en el carril
+        // es una copia, no ella misma. Así el hueco de la mano sigue existiendo
+        // y la baraja puede reponerlo.
+        transform.SetParent(_originalParent, worldPositionStays: false);
+        _rect.anchoredPosition = _originalAnchoredPos;
+        transform.localScale = _originalScale;
+
+        if (_barajaAReponer == null)
         {
             return;
         }
 
-        // No cayó en ningún carril válido: vuelve a su sitio en la mano.
-        transform.SetParent(_originalParent, worldPositionStays: false);
-        _rect.anchoredPosition = _originalAnchoredPos;
-        transform.localScale = _originalScale;
+        PlayerDeck baraja = _barajaAReponer;
+        _barajaAReponer = null;
+
+        // Va lo último: si la baraja está vacía, esta llamada desactiva el hueco.
+        baraja.ColocarEnMano(gameObject);
     }
 
-    /// <summary>Lo llama <see cref="BoardSlot"/> cuando acepta la carta.</summary>
-    public void MarkAsDropped() => _droppedInSlot = true;
+    /// <summary>
+    /// Lo llama <see cref="BoardSlot"/> cuando despliega esta carta. La baraja
+    /// repondrá el hueco en cuanto termine el arrastre.
+    /// </summary>
+    public void MarcarComoJugada(PlayerDeck baraja) => _barajaAReponer = baraja;
 }

@@ -30,14 +30,27 @@ public class SistemaTurnos : MonoBehaviour
     /// <summary>Turno del jugador 1 (humano). Antes era una variable estática.</summary>
     public bool TurnoJugador1 { get; private set; } = true;
 
-    /// <summary>Número de turno jugado, empezando en 1.</summary>
-    public int TurnoActual { get; private set; } = 1;
+    /// <summary>
+    /// Ronda en curso, empezando en 1. Cada cambio de turno es un cambio de
+    /// ronda (DESIGN.md §5), así que este es el único contador que se muestra.
+    /// </summary>
+    public int RondaActual { get; private set; } = 1;
 
     /// <summary>Se emite después de cada cambio de turno.</summary>
     public event Action TurnoCambiado;
 
     /// <summary>Jugador al que le toca actuar ahora mismo.</summary>
     public Jugador JugadorActivo => TurnoJugador1 ? jugador1 : jugador2;
+
+    private void Awake()
+    {
+        // DESIGN.md §5: el jugador inicial se elige al azar. Va en Awake y no en
+        // Start porque Start ya reparte el maná del primer turno, y para eso hay
+        // que saber de quién es.
+        // UnityEngine.Random explícito: este fichero importa System y UnityEngine,
+        // y "Random" a secas sería ambiguo.
+        TurnoJugador1 = UnityEngine.Random.value < 0.5f;
+    }
 
     private void Start()
     {
@@ -50,7 +63,7 @@ public class SistemaTurnos : MonoBehaviour
     public void terminarTurno()
     {
         TurnoJugador1 = !TurnoJugador1;
-        TurnoActual++;
+        RondaActual++;
 
         ConcederManaDelTurno();
         ActualizarUI();
@@ -80,7 +93,7 @@ public class SistemaTurnos : MonoBehaviour
 
         if (contadorTurno != null)
         {
-            contadorTurno.text = $"Turno: {TurnoActual}";
+            contadorTurno.text = $"Ronda: {RondaActual}";
         }
     }
 }
