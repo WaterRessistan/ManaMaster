@@ -1,4 +1,5 @@
 using ManaMaster.Core.Cards;
+using ManaMaster.Unity.Cards;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -71,7 +72,7 @@ public class DisplayCard : MonoBehaviour
             return;
         }
 
-        MonsterCardDefinition definicion = Carta.Definition;
+        IMonsterCard definicion = Carta.Definition;
 
         SetTexto(textonombre, definicion.DisplayName);
         SetTexto(numataque, definicion.Attack.ToString());
@@ -79,10 +80,14 @@ public class DisplayCard : MonoBehaviour
         SetTexto(numcura, definicion.HealPerTurn.ToString());
         SetTexto(numvida, Carta.CurrentHealth.ToString());
 
+        // El arte es un Sprite, así que no cabe en IMonsterCard: el motor de
+        // reglas se compila sin UnityEngine. Se lee de la definición concreta.
+        Sprite arte = (definicion as CardDefinition)?.Artwork;
+
         if (artImage != null)
         {
-            artImage.sprite = definicion.Artwork;
-            artImage.enabled = definicion.Artwork != null;
+            artImage.sprite = arte;
+            artImage.enabled = arte != null;
         }
     }
 

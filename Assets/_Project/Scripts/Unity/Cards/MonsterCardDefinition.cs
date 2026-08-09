@@ -1,6 +1,7 @@
+using ManaMaster.Core.Cards;
 using UnityEngine;
 
-namespace ManaMaster.Core.Cards
+namespace ManaMaster.Unity.Cards
 {
     /// <summary>
     /// Carta de monstruo: la unica que se despliega fisicamente en la arena,
@@ -9,7 +10,7 @@ namespace ManaMaster.Core.Cards
     [CreateAssetMenu(
         menuName = "Mana Master/Carta de monstruo",
         fileName = "NuevoMonstruo")]
-    public sealed class MonsterCardDefinition : CardDefinition
+    public sealed class MonsterCardDefinition : CardDefinition, IMonsterCard
     {
         [Header("Combate")]
         [SerializeField, Min(1)] private int maxHealth = 1;

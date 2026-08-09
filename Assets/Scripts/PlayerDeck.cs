@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using ManaMaster.Core.Cards;
+using ManaMaster.Unity.Cards;
 using UnityEngine;
 
 /// <summary>

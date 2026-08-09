@@ -44,6 +44,17 @@
 *.VC.db
 
 # ---------------------------------------------------------------------
+# Tests fuera de Unity (dotnet)
+# ---------------------------------------------------------------------
+# La regla *.csproj de arriba es para los proyectos que genera Unity. El de
+# los tests lo mantenemos nosotros a mano, así que se versiona.
+!/[Tt]ests/*.csproj
+/[Tt]ests/[Bb]in/
+/[Tt]ests/[Oo]bj/
+/[Tt]ests/*.log
+/[Tt]ests/*results*.xml
+
+# ---------------------------------------------------------------------
 # Sistema operativo
 # ---------------------------------------------------------------------
 .DS_Store

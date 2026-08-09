@@ -1,17 +1,22 @@
+using ManaMaster.Core.Cards;
 using UnityEngine;
 
-namespace ManaMaster.Core.Cards
+namespace ManaMaster.Unity.Cards
 {
     /// <summary>
-    /// Datos inmutables comunes a cualquier carta del juego.
+    /// Datos inmutables comunes a cualquier carta del juego, como asset de Unity.
     /// </summary>
     /// <remarks>
     /// Una definicion es una plantilla compartida: existe una sola en todo el
     /// juego por cada carta distinta, y nunca cambia durante una partida. El
     /// estado que si cambia (vida actual, objetos equipados) vive en
     /// <see cref="CardInstance"/>.
+    ///
+    /// Vive en el ensamblado <c>ManaMaster.Unity</c> y no en el Core porque es un
+    /// <see cref="ScriptableObject"/>. El motor de reglas la ve solo a traves de
+    /// <see cref="ICard"/>, que no sabe nada de Unity.
     /// </remarks>
-    public abstract class CardDefinition : ScriptableObject
+    public abstract class CardDefinition : ScriptableObject, ICard
     {
         [Header("Identidad")]
         [SerializeField] private string displayName = "Carta sin nombre";

@@ -1,7 +1,9 @@
 {
-    "name": "ManaMaster.Core",
-    "rootNamespace": "ManaMaster.Core",
-    "references": [],
+    "name": "ManaMaster.Unity",
+    "rootNamespace": "ManaMaster.Unity",
+    "references": [
+        "ManaMaster.Core"
+    ],
     "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
@@ -10,5 +12,5 @@
     "autoReferenced": true,
     "defineConstraints": [],
     "versionDefines": [],
-    "noEngineReferences": true
+    "noEngineReferences": false
 }

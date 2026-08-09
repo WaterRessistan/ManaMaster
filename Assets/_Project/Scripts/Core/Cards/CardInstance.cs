@@ -13,12 +13,12 @@ namespace ManaMaster.Core.Cards
     /// </remarks>
     public sealed class CardInstance
     {
-        public MonsterCardDefinition Definition { get; }
+        public IMonsterCard Definition { get; }
 
         /// <summary>Vida restante. Al llegar a 0 el monstruo queda fuera de combate.</summary>
         public int CurrentHealth { get; private set; }
 
-        public CardInstance(MonsterCardDefinition definition)
+        public CardInstance(IMonsterCard definition)
         {
             Definition = definition
                 ?? throw new ArgumentNullException(nameof(definition));

@@ -1,0 +1,41 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Los tests del dominio, compilados FUERA de Unity.
+
+    No hay copia del codigo: este proyecto enlaza por referencia los mismos
+    ficheros que Unity compila en el ensamblado ManaMaster.Core y los mismos
+    tests que ejecuta el Test Runner en modo EditMode. Un solo fuente, dos
+    ejecutores, y `dotnet test` no necesita abrir el editor (DESIGN.md §12).
+
+    Si algun dia esto deja de compilar por un `using UnityEngine`, es que el
+    Core ha dejado de ser puro: el arreglo es sacar ese fichero a
+    ManaMaster.Unity, no anadir una referencia aqui.
+  -->
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Nullable>disable</Nullable>
+    <IsPackable>false</IsPackable>
+    <AssemblyName>ManaMaster.Core.Tests</AssemblyName>
+    <RootNamespace>ManaMaster.Core.Tests</RootNamespace>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="../Assets/_Project/Scripts/Core/**/*.cs" />
+    <Compile Include="../Assets/_Project/Tests/Core/**/*.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!--
+      NUnit 3 y no 4: es la version que trae el Test Framework de Unity, y los
+      tests tienen que compilar igual en los dos sitios.
+    -->
+    <PackageReference Include="NUnit" Version="3.14.0" />
+    <PackageReference Include="NUnit3TestAdapter" Version="4.6.0" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" />
+  </ItemGroup>
+
+</Project>

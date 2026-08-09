@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace ManaMaster.Core.Cards
+namespace ManaMaster.Unity.Cards
 {
     /// <summary>
     /// Listado de todas las cartas que existen en el juego.

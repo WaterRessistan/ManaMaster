@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace ManaMaster.Core.Cards
+namespace ManaMaster.Unity.Cards
 {
     /// <summary>
     /// Carta de objeto: no aparece fisicamente en la arena, se aplica sobre una

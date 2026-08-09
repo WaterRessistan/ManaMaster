@@ -64,6 +64,11 @@ Inserta C en 3  →  [1] A   [2] B   [3] C
 - Una vez en la arena, **las cartas no se reordenan a voluntad**. La única forma de
   mover un monstruo hacia atrás es insertar otro por delante.
 
+**En la interfaz, el carril sobre el que sueltas la carta es la posición de
+inserción.** Soltar sobre el carril 2 mete la carta en el 2 y empuja hacia atrás
+lo que hubiera. Durante el arrastre se resaltan las posiciones válidas, que son
+las de `1` a `(ocupadas + 1)`.
+
 > Esta es la salida al problema del monstruo de rango atrapado en el carril 1: se
 > juega un melee delante y el rango pasa al carril 2, desde donde ya puede atacar.
 
@@ -119,7 +124,8 @@ ventaja (ej. `+2 daño de rango`, permitir atacar a distancia desde el carril 1)
 5. Turno del rival, idéntico
 ```
 
-Cada cambio de turno es un **cambio de ronda**. El jugador inicial se elige al azar.
+Cada cambio de turno es un **cambio de ronda**: turno y ronda son el mismo número,
+y la interfaz muestra **solo el contador de Ronda**. El jugador inicial se elige al azar.
 Un monstruo desplegado **ataca en la fase de combate de ese mismo turno** (no hay
 enfermedad de invocación).
 
@@ -163,8 +169,8 @@ recalcula su objetivo sobre el tablero **ya compactado**.
 ## 7. Maná y sacrificio
 
 - **+3 de maná** al empezar cada turno.
-- Sin acumulación ni tope especiales por ahora (los incrementos progresivos son
-  materia de la fase de balanceo).
+- **El maná no gastado se acumula de un turno al siguiente, y no hay tope.** Los
+  incrementos progresivos y un posible máximo son materia de la fase de balanceo.
 - **Sacrificio voluntario:** un monstruo propio en la arena puede retirarse a
   voluntad para recuperar maná. Devuelve **la mitad de su coste, redondeando hacia
   abajo** (`coste / 2`). El monstruo sale de la partida definitivamente y su hueco
@@ -232,17 +238,25 @@ Pendientes de la fase de balanceo. Vivirán en un ScriptableObject de configurac
 
 ## 11. Hoja de ruta
 
-| Fase | Contenido | Estado |
-|---|---|---|
-| **1** | Saneamiento, git, ScriptableObjects, eliminar estado global | 🔨 En curso |
-| **2** | Motor de reglas del duelo (dominio puro + tests) | ⏳ |
-| **3** | Duelo jugable contra IA | ⏳ |
-| **4** | Persistencia local, colección, diamantes | ⏳ |
-| **5** | Las 4 pantallas y el flujo entre ellas | ⏳ |
-| **6** | Contenido, balanceo, arte, audio | ⏳ |
-| **7** | Objetos y equipamiento | ⏳ |
-| **8** | Adaptación a móvil | ⏳ |
-| **9** | Online y backend | ⏳ |
+Los números de fase son nombres estables: el resto del documento los cita, así que
+no se renumeran. El **orden de ejecución** es otra cosa y va aparte.
+
+| Fase | Contenido | Orden | Estado |
+|---|---|---|---|
+| **1** | Saneamiento, git, ScriptableObjects, eliminar estado global | 1.º | ✅ Hecha |
+| **0** | Andamiaje: Core sin Unity, tests, scripts de verificación | 2.º | 🔨 En curso |
+| **2** | Motor de reglas del duelo (dominio puro + tests) | 3.º | ⏳ |
+| **3** | Duelo jugable contra IA | 4.º | ⏳ |
+| **5** | Las 4 pantallas y el flujo entre ellas | 5.º | ⏳ |
+| **4** | Persistencia local, colección, diamantes | 6.º | ⏳ |
+| **6** | Contenido, balanceo, arte, audio | 7.º | ⏳ |
+| **7** | Objetos y equipamiento | — | Fuera de la v1 |
+| **8** | Adaptación a móvil | — | Fuera de la v1 |
+| **9** | Online y backend | — | Fuera de la v1 |
+
+**La v1 son las fases 0 a 6.** La 5 se adelanta a la 4 porque la persistencia
+guarda mazos y colección, y esas pantallas son las que definen qué hay que
+guardar: hacerla antes obliga a rehacer el formato de guardado.
 
 ---
 
@@ -254,7 +268,18 @@ Pendientes de la fase de balanceo. Vivirán en un ScriptableObject de configurac
   afectaría a todas sus copias.
 - **El motor de reglas no depende de Unity.** Vive en `ManaMaster.Core`, sin
   MonoBehaviours, de modo que se puede testear sin abrir el editor y, más adelante,
-  ejecutar en el servidor para el modo online.
+  ejecutar en el servidor para el modo online. Esto no es una buena intención: el
+  ensamblado declara `noEngineReferences: true`, así que **el compilador rechaza
+  cualquier `using UnityEngine` que se cuele**. Los ScriptableObject de definición
+  de carta viven aparte, en `ManaMaster.Unity`, y el Core los ve solo a través de
+  la interfaz `IMonsterCard`.
+- **Los mismos tests corren en dos sitios.** Un único conjunto NUnit se compila
+  desde Unity (EditMode) y desde `dotnet test`, que no necesita el editor y tarda
+  segundos. Es el bucle de verificación por defecto.
+- **Las escenas se construyen con scripts de editor versionados**, no cableando a
+  mano en el Inspector: así la jerarquía se revisa en el diff y se puede regenerar.
+- **Solo español en la v1**, sin sistema de localización. Los textos van
+  directamente en la interfaz.
 - **Nada en `Resources/`.** Carga todo en memoria al arrancar; mal para móvil.
 - **Diseño pensado para móvil desde el principio** aunque la v1 sea de PC: anclas
   responsive, input por puntero abstracto, sin dependencia del hover.
@@ -266,6 +291,10 @@ Pendientes de la fase de balanceo. Vivirán en un ScriptableObject de configurac
 ## 13. Puntos abiertos
 
 - Precio y contenido exactos de los sobres (valores provisionales en §10).
-- Reparto de rarezas del set de cartas actual.
-- Si el drag & drop debe permitir elegir la posición de inserción soltando sobre un
-  carril concreto, o colocar siempre en la última posición libre. Ver §3.
+- Reparto de rarezas del set de cartas actual. Hoy hay 10 monstruos (5 comunes,
+  4 raras, 1 épica, **0 legendarias**) y **ninguna carta de objeto**, así que el
+  mazo de 10+10 del §8 todavía no se puede construir.
+- Arte definitivo de la carta: la plantilla actual es provisional.
+
+> Resuelto y movido al §3: el drag & drop **sí** elige posición de inserción,
+> soltando sobre el carril donde quieres que entre la carta.
