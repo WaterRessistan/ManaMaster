@@ -53,34 +53,47 @@ namespace ManaMaster.Core.Tests
         }
 
         /// <summary>
-        /// EMPATE. Unas 3 de cada 400 partidas no las gana nadie.
+        /// Una partida sin salida acaba en tablas al llegar al tope de rondas
+        /// (DESIGN.md §9).
         /// </summary>
         /// <remarks>
-        /// No es un fallo del motor, es un agujero del reglamento: con las dos
-        /// arenas llenas nadie puede desplegar, y si la curacion iguala o supera
-        /// al dano que se hacen, ningun monstruo muere. La partida se queda
-        /// girando con el mana subiendo sin parar.
-        ///
-        /// El §9 no lo contempla: ninguno de los dos se queda sin monstruos ni
-        /// tiene la arena vacia, asi que ninguno pierde. El reglamento si deja
-        /// una salida (sacrificar para hacer sitio), pero la IA de la v1 no
-        /// sacrifica nunca, asi que no sabe usarla.
-        ///
-        /// Este test fija el caso para que quede documentado y para comprobar lo
-        /// unico que hoy si esta garantizado: que el simulador corta por el tope
-        /// de acciones en vez de colgarse.
+        /// El caso: las dos arenas llenas, con lo que nadie puede desplegar, y
+        /// la curacion igualando al dano que se hacen, con lo que no muere
+        /// nadie. Sin el tope la partida no acabaria nunca. Pasa en algo menos
+        /// del 0,5 % de las simulaciones.
         /// </remarks>
         [Test]
-        public void UnEmpateCortaPorElTopeEnLugarDeColgarse()
+        public void UnaPartidaSinSalidaAcabaEnTablas()
         {
             MatchState partida = Duelo(semilla: 76);
 
             ResultadoPartida resultado = MatchRunner.Jugar(
                 partida, new AgenteHeuristico(), new AgenteHeuristico());
 
-            Assert.That(resultado, Is.EqualTo(ResultadoPartida.EnCurso));
+            Assert.That(resultado, Is.EqualTo(ResultadoPartida.Empate));
+            Assert.That(partida.Ronda, Is.EqualTo(MatchState.MaxRondas));
+            Assert.That(partida.Ganador, Is.Null, "en tablas no gana nadie");
             Assert.That(partida.Jugador1.Arena.IsFull, Is.True);
             Assert.That(partida.Jugador2.Arena.IsFull, Is.True);
+        }
+
+        /// <summary>
+        /// El tope tiene que dejar margen de sobra: las partidas que se deciden
+        /// duran entre 11 y 36 rondas.
+        /// </summary>
+        [Test]
+        public void ElTopeDeRondasNoCortaPartidasNormales()
+        {
+            for (int semilla = 0; semilla < 50; semilla++)
+            {
+                MatchState partida = Duelo(semilla);
+
+                MatchRunner.Jugar(partida, new AgenteHeuristico(), new AgenteHeuristico());
+
+                Assert.That(partida.Resultado,
+                    Is.Not.EqualTo(ResultadoPartida.Empate),
+                    $"la partida con semilla {semilla} se corto por el tope");
+            }
         }
 
         /// <summary>
@@ -106,6 +119,8 @@ namespace ManaMaster.Core.Tests
             MatchState partida = Duelo(semilla: 42);
 
             MatchRunner.Jugar(partida, new AgenteHeuristico(), new AgenteHeuristico());
+
+            Assert.That(partida.Ganador, Is.Not.Null, "esta partida no es de tablas");
 
             PlayerState perdedor = ReferenceEquals(partida.Ganador, partida.Jugador1)
                 ? partida.Jugador2

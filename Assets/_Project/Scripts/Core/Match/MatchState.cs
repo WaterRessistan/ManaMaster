@@ -28,6 +28,20 @@ namespace ManaMaster.Core.Match
         public const int ManaPorTurno = 3;
 
         /// <summary>
+        /// Rondas tras las cuales la partida acaba en tablas (DESIGN.md §9).
+        /// </summary>
+        /// <remarks>
+        /// Salida de emergencia para el caso raro pero posible de que las dos
+        /// arenas esten llenas y la curacion iguale al dano: entonces no muere
+        /// nadie y sin este tope la partida no acabaria nunca.
+        ///
+        /// El valor esta medido, no elegido a ojo: simulando 2.000 partidas, las
+        /// que se deciden duran entre 11 y 36 rondas, con mediana 18. Hay que
+        /// volver a medirlo en la fase de balanceo con las cartas definitivas.
+        /// </remarks>
+        public const int MaxRondas = 60;
+
+        /// <summary>
         /// Monta la partida y sortea quien empieza (DESIGN.md §5).
         /// </summary>
         public MatchState(PlayerState jugador1, PlayerState jugador2, IRandom azar)
@@ -66,7 +80,7 @@ namespace ManaMaster.Core.Match
 
         public bool Terminada => Resultado != ResultadoPartida.EnCurso;
 
-        /// <summary>Ganador, o null si la partida sigue.</summary>
+        /// <summary>Ganador, o null si la partida sigue o ha quedado en tablas.</summary>
         public PlayerState Ganador => Resultado switch
         {
             ResultadoPartida.VictoriaJugador1 => Jugador1,
@@ -105,6 +119,12 @@ namespace ManaMaster.Core.Match
 
             if (Terminada)
             {
+                return eventos;
+            }
+
+            if (Ronda >= MaxRondas)
+            {
+                Resultado = ResultadoPartida.Empate;
                 return eventos;
             }
 

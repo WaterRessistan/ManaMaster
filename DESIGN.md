@@ -203,6 +203,21 @@ Un jugador pierde cuando:
 
 No existe vida de héroe: toda la presión del juego viene de perder monstruos.
 
+### Empate
+
+La partida termina **en tablas al cumplirse la ronda 60**, sin ganador.
+
+Es una salida de emergencia para una situación rara pero posible: con las dos
+arenas llenas nadie puede desplegar, y si la curación iguala al daño que se
+hacen, ningún monstruo muere y la partida no acaba nunca. Simulando 2.000
+partidas aparece en un **0,45 %** de los casos.
+
+> El límite de 60 está medido, no elegido a ojo: en esas 2.000 partidas, las que
+> sí se deciden duran entre 11 y 36 rondas (mediana 18). El tope deja más del
+> doble de margen sobre la partida más larga observada. **Hay que volver a
+> medirlo en la fase de balanceo**, cuando las estadísticas de las cartas sean
+> las definitivas.
+
 > 📌 El documento original decía *"ganará el jugador que se quede sin cartas"*. Es
 > una errata: **pierde**.
 
@@ -222,6 +237,7 @@ Pendientes de la fase de balanceo. Vivirán en un ScriptableObject de configurac
 | Concepto | Valor |
 |---|---|
 | Victoria / Derrota | 50 💎 / 15 💎 |
+| Empate (a cada jugador) | 30 💎 |
 | Sobre (3 cartas, ≥1 Rara garantizada) | 100 💎 |
 | Carta suelta: Común / Rara / Épica / Legendaria | 50 / 150 / 500 / 1500 💎 |
 | Probabilidad de sobre | Común 70% · Rara 25% · Épica 4,5% · Legendaria 0,5% |
