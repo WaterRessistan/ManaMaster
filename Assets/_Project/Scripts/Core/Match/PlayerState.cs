@@ -137,5 +137,34 @@ namespace ManaMaster.Core.Match
 
             return ResultadoDespliegue.Ok;
         }
+
+        /// <summary>
+        /// Retira voluntariamente un monstruo propio de la arena y recupera la
+        /// mitad de su coste, redondeando hacia abajo (DESIGN.md §7).
+        /// </summary>
+        /// <remarks>
+        /// El monstruo sale de la partida definitivamente: no vuelve al mazo ni
+        /// a la mano, asi que sacrificar acerca a la derrota del §9. El hueco se
+        /// cierra al momento.
+        ///
+        /// Con la formula actual un monstruo de coste 1 devuelve 0 de mana. Esta
+        /// en el §7 como pendiente de la fase de balanceo.
+        /// </remarks>
+        /// <returns>Mana recuperado, o -1 si ese carril estaba vacio.</returns>
+        public int TrySacrificar(int carril)
+        {
+            CardInstance monstruo = Arena[carril];
+            if (monstruo == null)
+            {
+                return -1;
+            }
+
+            int manaRecuperado = monstruo.SacrificeManaValue;
+
+            Arena.RemoveAt(carril);
+            GanarMana(manaRecuperado);
+
+            return manaRecuperado;
+        }
     }
 }
