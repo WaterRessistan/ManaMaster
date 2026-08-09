@@ -48,6 +48,23 @@ namespace ManaMaster.Core.Tests
         }
 
         /// <summary>
+        /// Jugador con los monstruos ya desplegados en los carriles dados, en
+        /// orden. Su mazo va vacio: para los tests de combate solo importa la
+        /// arena.
+        /// </summary>
+        public static PlayerState Jugador(string nombre, params CardInstance[] enArena)
+        {
+            PlayerState jugador = new(nombre, Mazo());
+
+            for (int carril = 0; carril < enArena.Length; carril++)
+            {
+                jugador.Arena.Insert(carril, enArena[carril]);
+            }
+
+            return jugador;
+        }
+
+        /// <summary>
         /// La arena escrita como en el DESIGN.md: "C A B" o "A B -".
         /// </summary>
         public static string Disposicion(Arena arena)
