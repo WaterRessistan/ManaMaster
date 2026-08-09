@@ -12,14 +12,16 @@ cambia primero ahí y después en el código.
 ## Comandos
 
 ```bash
-scripts/test.sh          # tests del dominio con dotnet, sin abrir Unity (segundos)
-scripts/unity-check.sh   # compila en Unity y corre los EditMode en batchmode (minutos)
+scripts/test.sh                   # dominio con dotnet, sin abrir Unity (segundos)
+scripts/unity-check.sh            # EditMode y PlayMode en batchmode (minutos)
+scripts/unity-check.sh EditMode   # solo EditMode, más rápido
 ```
 
 `scripts/test.sh` es el bucle por defecto. `unity-check.sh` **requiere que el
 editor esté cerrado** (Unity bloquea el proyecto) y es lo que detecta lo que
 dotnet no ve: MonoBehaviours que no compilan, referencias de ensamblado rotas,
-assets que no importan.
+assets que no importan y —en PlayMode— que la escena de duelo arranca y se
+juega de verdad.
 
 Antes de dar por cerrado cualquier trabajo, los dos en verde.
 
@@ -30,9 +32,11 @@ Antes de dar por cerrado cualquier trabajo, los dos en verde.
 | Ensamblado | Dónde | Qué va aquí |
 |---|---|---|
 | `ManaMaster.Core` | `Assets/_Project/Scripts/Core/` | Reglas del juego. **C# puro.** |
-| `ManaMaster.Unity` | `Assets/_Project/Scripts/Unity/` | ScriptableObjects y adaptadores |
-| `ManaMaster.Core.Tests` | `Assets/_Project/Tests/Core/` | Tests NUnit del dominio |
-| `Assembly-CSharp` | `Assets/Scripts/` | Código heredado, en retirada |
+| `ManaMaster.Unity` | `Assets/_Project/Scripts/Unity/` | ScriptableObjects, controlador y vistas |
+| `ManaMaster.Herramientas` | `Assets/_Project/Scripts/Editor/` | Generadores de escena y utilidades del editor |
+| `ManaMaster.Core.Tests` | `Assets/_Project/Tests/Core/` | Tests del dominio (dotnet **y** EditMode) |
+| `ManaMaster.Unity.Tests` | `Assets/_Project/Tests/Unity/` | Lo que necesita ScriptableObjects (EditMode) |
+| `ManaMaster.PlayTests` | `Assets/_Project/Tests/Play/` | La escena arrancada de verdad (PlayMode) |
 
 **`ManaMaster.Core` declara `noEngineReferences: true`.** No es una convención,
 es el compilador: un `using UnityEngine` ahí dentro no compila. Si necesitas un
@@ -76,10 +80,17 @@ entienden los dos.
 
 Fases y orden de ejecución, en `DESIGN.md` §11. Resumen:
 
-- **Hecho**: Fase 1 (saneamiento) y Fase 0 (andamiaje: Core puro, tests, scripts).
-- **Siguiente**: Fase 2, el motor de reglas del duelo. Hoy **no existe combate**:
-  nadie ataca, nadie cura y nadie gana.
-- El código de `Assets/Scripts/` es transitorio y muere en la Fase 3.
+- **Hecho**: Fase 1 (saneamiento), Fase 0 (andamiaje), Fase 2 (motor de reglas)
+  y Fase 3 (duelo jugable contra la IA).
+- **Siguiente**: Fase 5, las 4 pantallas y el flujo entre ellas. Hoy solo
+  existe la de duelo, y el mazo se genera al azar en cada partida.
+- El prototipo de `Assets/Scripts/` ya no existe: lo sustituyen el motor del
+  Core y las vistas de `ManaMaster.Unity`.
+
+**La escena de duelo se genera**, no se edita a mano: menú
+*Mana Master > Reconstruir escena de duelo*. Los retoques hechos en el editor
+se pierden al regenerarla, así que los cambios de fondo van en
+`ConstructorDeEscenaDuelo`.
 
 Cada fase se cierra con los dos comandos de verificación en verde y un commit
 propio.

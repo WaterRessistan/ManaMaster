@@ -260,10 +260,10 @@ no se renumeran. El **orden de ejecución** es otra cosa y va aparte.
 | Fase | Contenido | Orden | Estado |
 |---|---|---|---|
 | **1** | Saneamiento, git, ScriptableObjects, eliminar estado global | 1.º | ✅ Hecha |
-| **0** | Andamiaje: Core sin Unity, tests, scripts de verificación | 2.º | 🔨 En curso |
-| **2** | Motor de reglas del duelo (dominio puro + tests) | 3.º | ⏳ |
-| **3** | Duelo jugable contra IA | 4.º | ⏳ |
-| **5** | Las 4 pantallas y el flujo entre ellas | 5.º | ⏳ |
+| **0** | Andamiaje: Core sin Unity, tests, scripts de verificación | 2.º | ✅ Hecha |
+| **2** | Motor de reglas del duelo (dominio puro + tests) | 3.º | ✅ Hecha |
+| **3** | Duelo jugable contra IA | 4.º | ✅ Hecha |
+| **5** | Las 4 pantallas y el flujo entre ellas | 5.º | 🔨 Siguiente |
 | **4** | Persistencia local, colección, diamantes | 6.º | ⏳ |
 | **6** | Contenido, balanceo, arte, audio | 7.º | ⏳ |
 | **7** | Objetos y equipamiento | — | Fuera de la v1 |
