@@ -1,11 +1,16 @@
 #!/usr/bin/env bash
 #
-# Compila el proyecto dentro de Unity y ejecuta los tests EditMode, en batchmode
-# y sin abrir el editor.
+# Compila el proyecto dentro de Unity y ejecuta los tests, en batchmode y sin
+# abrir el editor.
+#
+#   scripts/unity-check.sh            EditMode y PlayMode
+#   scripts/unity-check.sh EditMode   solo EditMode (mas rapido)
+#   scripts/unity-check.sh PlayMode   solo PlayMode
 #
 # Complementa a scripts/test.sh: aquel verifica el dominio en segundos, este
 # verifica lo que solo Unity puede verificar (que los MonoBehaviour compilan,
-# que los ensamblados están bien referenciados, que los assets importan).
+# que los ensamblados estan bien referenciados, que los assets importan) y, en
+# PlayMode, que la escena de duelo arranca y se juega de verdad.
 #
 # IMPORTANTE: el editor tiene que estar CERRADO. Unity bloquea el proyecto con
 # Temp/UnityLockfile y una segunda instancia falla o corrompe la Library.
@@ -28,36 +33,54 @@ if [[ -f "$RAIZ/Temp/UnityLockfile" ]]; then
     exit 1
 fi
 
-LOG="$RAIZ/Tests/unity-check.log"
-RESULTADOS="$RAIZ/Tests/unity-editmode-results.xml"
-rm -f "$LOG" "$RESULTADOS"
-
-echo "Ejecutando Unity en batchmode (esto tarda: tiene que importar assets)..."
-
-set +e
-"$UNITY" \
-    -batchmode \
-    -nographics \
-    -projectPath "$(wslpath -w "$RAIZ")" \
-    -runTests \
-    -testPlatform EditMode \
-    -testResults "$(wslpath -w "$RESULTADOS")" \
-    -logFile "$(wslpath -w "$LOG")"
-CODIGO=$?
-set -e
-
-# Códigos de -runTests: 0 todo pasa, 2 hay tests fallando, 3 la ejecución falló.
-case "$CODIGO" in
-    0) echo "OK: compila y los tests EditMode pasan." ;;
-    2) echo "FALLO: hay tests EditMode en rojo. Detalle en $RESULTADOS" >&2 ;;
-    3) echo "FALLO: Unity no pudo ejecutar los tests (¿error de compilación?)." >&2 ;;
-    *) echo "FALLO: Unity terminó con código $CODIGO." >&2 ;;
-esac
-
-if [[ "$CODIGO" -ne 0 && -f "$LOG" ]]; then
-    echo "--- errores del log ---" >&2
-    grep -E "error CS|Compilation failed|Assembly.*error" "$LOG" | head -30 >&2 || true
-    echo "--- log completo en $LOG ---" >&2
+MODOS=("EditMode" "PlayMode")
+if [[ $# -ge 1 ]]; then
+    MODOS=("$1")
 fi
+
+CODIGO=0
+
+for MODO in "${MODOS[@]}"; do
+    minusculas="$(echo "$MODO" | tr '[:upper:]' '[:lower:]')"
+    LOG="$RAIZ/Tests/unity-${minusculas}.log"
+    RESULTADOS="$RAIZ/Tests/unity-${minusculas}-results.xml"
+    rm -f "$LOG" "$RESULTADOS"
+
+    echo "Ejecutando Unity en batchmode ($MODO)..."
+
+    set +e
+    "$UNITY" \
+        -batchmode \
+        -nographics \
+        -projectPath "$(wslpath -w "$RAIZ")" \
+        -runTests \
+        -testPlatform "$MODO" \
+        -testResults "$(wslpath -w "$RESULTADOS")" \
+        -logFile "$(wslpath -w "$LOG")"
+    ESTE=$?
+    set -e
+
+    # Codigos de -runTests: 0 todo pasa, 2 hay tests fallando, 3 la ejecucion
+    # fallo (normalmente un error de compilacion).
+    if [[ "$ESTE" -eq 0 ]]; then
+        RESUMEN="$(grep -o 'total="[0-9]*" passed="[0-9]*" failed="[0-9]*"' \
+            "$RESULTADOS" 2>/dev/null | head -1 || true)"
+        echo "  OK $MODO ${RESUMEN}"
+        continue
+    fi
+
+    CODIGO="$ESTE"
+
+    case "$ESTE" in
+        2) echo "  FALLO $MODO: hay tests en rojo. Detalle en $RESULTADOS" >&2 ;;
+        3) echo "  FALLO $MODO: Unity no pudo ejecutarlos (error de compilacion?)." >&2 ;;
+        *) echo "  FALLO $MODO: Unity termino con codigo $ESTE." >&2 ;;
+    esac
+
+    if [[ -f "$LOG" ]]; then
+        grep -E "error CS|Compilation failed|Assembly.*error" "$LOG" | head -20 >&2 || true
+        echo "  log completo en $LOG" >&2
+    fi
+done
 
 exit "$CODIGO"

@@ -1,0 +1,402 @@
+using System.Collections.Generic;
+using ManaMaster.Core.Board;
+using ManaMaster.Core.Match;
+using ManaMaster.Unity.Cards;
+using ManaMaster.Unity.Duelo;
+using UnityEditor;
+using UnityEditor.SceneManagement;
+using UnityEngine;
+using UnityEngine.EventSystems;
+using UnityEngine.InputSystem.UI;
+using UnityEngine.SceneManagement;
+using UnityEngine.UI;
+
+namespace ManaMaster.Herramientas
+{
+    /// <summary>
+    /// Genera la escena de duelo entera desde codigo.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Reconstruirla es seguro: borra lo que hubiera y la deja igual que la
+    /// ultima vez. Lo que se pierde al regenerar son los retoques hechos a mano
+    /// en el editor, asi que los cambios de fondo se hacen aqui.
+    /// </para>
+    /// <para>
+    /// La disposicion sigue el tablero del DESIGN.md §2: los traseros del rival
+    /// arriba del todo, su principal debajo, y en espejo los del jugador.
+    /// </para>
+    /// </remarks>
+    public static class ConstructorDeEscenaDuelo
+    {
+        public const string RutaEscena = "Assets/_Project/Scenes/Duelo.unity";
+
+        private const string RutaCatalogo =
+            "Assets/_Project/Content/Cards/CardCatalog.asset";
+
+        private static readonly Vector2 TamanoCarta = new(130f, 180f);
+        private static readonly Vector2 TamanoCarril = new(150f, 200f);
+
+        // Alturas de cada fila del tablero, de arriba abajo.
+        private const float AlturaTraserosRival = 385f;
+        private const float AlturaPrincipalRival = 200f;
+        private const float AlturaPrincipalJugador = -95f;
+        private const float AlturaTraserosJugador = -280f;
+        private const float AlturaMano = -450f;
+
+        private const float SeparacionCarriles = 175f;
+
+        [MenuItem("Mana Master/Reconstruir escena de duelo")]
+        public static void Reconstruir()
+        {
+            Scene escena = EditorSceneManager.NewScene(
+                NewSceneSetup.EmptyScene, NewSceneMode.Single);
+
+            Camara();
+            SistemaDeEventos();
+
+            Canvas lienzo = Lienzo();
+
+            MatchController controlador = Partida();
+
+            VistaArena arenaRival = Arena(
+                lienzo.transform, controlador, esDelRival: true);
+            VistaArena arenaJugador = Arena(
+                lienzo.transform, controlador, esDelRival: false);
+
+            Mano(lienzo.transform, controlador, arenaJugador);
+            VistaMarcador marcador = Marcador(lienzo.transform, controlador);
+            Resultado(lienzo.transform, controlador);
+
+            CablearControlador(controlador, arenaJugador, arenaRival, marcador);
+
+            System.IO.Directory.CreateDirectory(
+                System.IO.Path.GetDirectoryName(RutaEscena));
+
+            EditorSceneManager.MarkSceneDirty(escena);
+            EditorSceneManager.SaveScene(escena, RutaEscena);
+
+            AnadirABuildSettings();
+
+            Debug.Log($"[ConstructorDeEscenaDuelo] Escena regenerada en {RutaEscena}");
+        }
+
+        private static void Camara()
+        {
+            GameObject objeto = new("Camara", typeof(Camera));
+            Camera camara = objeto.GetComponent<Camera>();
+
+            camara.clearFlags = CameraClearFlags.SolidColor;
+            camara.backgroundColor = new Color(0.07f, 0.08f, 0.12f, 1f);
+            camara.orthographic = true;
+            camara.tag = "MainCamera";
+
+            objeto.transform.position = new Vector3(0f, 0f, -10f);
+        }
+
+        /// <summary>
+        /// El modulo de entrada tiene que ser el del Input System nuevo: el
+        /// proyecto tiene desactivado el antiguo y <c>StandaloneInputModule</c>
+        /// reventaria al arrancar.
+        /// </summary>
+        private static void SistemaDeEventos()
+        {
+            GameObject objeto = new("EventSystem", typeof(EventSystem));
+            objeto.AddComponent<InputSystemUIInputModule>();
+        }
+
+        private static Canvas Lienzo()
+        {
+            GameObject objeto = new("Canvas",
+                typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
+
+            Canvas lienzo = objeto.GetComponent<Canvas>();
+            lienzo.renderMode = RenderMode.ScreenSpaceOverlay;
+
+            CanvasScaler escalador = objeto.GetComponent<CanvasScaler>();
+            escalador.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+            escalador.referenceResolution = new Vector2(1920f, 1080f);
+            escalador.screenMatchMode =
+                CanvasScaler.ScreenMatchMode.MatchWidthOrHeight;
+            escalador.matchWidthOrHeight = 0.5f;
+
+            // Linea divisoria entre los dos bandos.
+            ConstructorDeInterfaz.Panel("LineaCentral", objeto.transform,
+                new Vector2(0f, 55f), new Vector2(1400f, 4f),
+                new Color(1f, 1f, 1f, 0.15f), recibeClics: false);
+
+            return lienzo;
+        }
+
+        private static MatchController Partida()
+        {
+            GameObject objeto = new("Partida",
+                typeof(MatchController), typeof(ReproductorDeCombate),
+                typeof(ControlDeTurno));
+
+            MatchController controlador = objeto.GetComponent<MatchController>();
+
+            ConstructorDeInterfaz.Cablear(controlador,
+                ("catalogo", AssetDatabase.LoadAssetAtPath<CardCatalog>(RutaCatalogo)));
+
+            return controlador;
+        }
+
+        private static VistaArena Arena(
+            Transform padre, MatchController controlador, bool esDelRival)
+        {
+            string lado = esDelRival ? "Rival" : "Jugador";
+
+            RectTransform raiz = ConstructorDeInterfaz.Nodo(
+                $"Arena{lado}", padre, Vector2.zero, new Vector2(600f, 400f));
+
+            VistaArena vista = raiz.gameObject.AddComponent<VistaArena>();
+
+            CarrilDeInsercion[] carriles = new CarrilDeInsercion[BoardLanes.Count];
+            for (int carril = 0; carril < BoardLanes.Count; carril++)
+            {
+                carriles[carril] = Carril(
+                    raiz, controlador, carril, esDelRival);
+            }
+
+            ConstructorDeInterfaz.Cablear(vista, ("controlador", controlador));
+            ConstructorDeInterfaz.CablearBool(vista, "esDelRival", esDelRival);
+            ConstructorDeInterfaz.CablearLista(vista, "carriles", carriles);
+
+            return vista;
+        }
+
+        private static CarrilDeInsercion Carril(
+            Transform padre, MatchController controlador, int carril, bool esDelRival)
+        {
+            Image zona = ConstructorDeInterfaz.Panel(
+                $"Carril{carril + 1}", padre,
+                PosicionDeCarril(carril, esDelRival), TamanoCarril,
+                new Color(1f, 1f, 1f, 0.05f));
+
+            CarrilDeInsercion insercion =
+                zona.gameObject.AddComponent<CarrilDeInsercion>();
+
+            Image resaltado = ConstructorDeInterfaz.Panel(
+                "Resaltado", zona.transform, Vector2.zero, TamanoCarril,
+                new Color(0.45f, 0.85f, 1f, 0.35f), recibeClics: false);
+            resaltado.enabled = false;
+
+            VistaCartaMonstruo carta = Carta("Carta", zona.transform, Vector2.zero);
+
+            ConstructorDeInterfaz.Cablear(insercion,
+                ("controlador", controlador),
+                ("vista", carta),
+                ("resaltado", resaltado));
+            ConstructorDeInterfaz.CablearInt(insercion, "carril", carril);
+
+            return insercion;
+        }
+
+        /// <summary>
+        /// Coloca cada carril segun el tablero del §2. Los traseros van cruzados
+        /// entre bandos: el 2 del jugador queda enfrente del 3 del rival, que es
+        /// justo a quien ataca.
+        /// </summary>
+        private static Vector2 PosicionDeCarril(int carril, bool esDelRival)
+        {
+            if (carril == BoardLanes.Principal)
+            {
+                return new Vector2(
+                    0f,
+                    esDelRival ? AlturaPrincipalRival : AlturaPrincipalJugador);
+            }
+
+            float altura = esDelRival ? AlturaTraserosRival : AlturaTraserosJugador;
+
+            // Carril 2 a la derecha del rival y a la izquierda del jugador.
+            float lado = carril == BoardLanes.PrimerTrasero ? 1f : -1f;
+            if (!esDelRival)
+            {
+                lado = -lado;
+            }
+
+            return new Vector2(lado * SeparacionCarriles, altura);
+        }
+
+        private static void Mano(
+            Transform padre, MatchController controlador, VistaArena arenaJugador)
+        {
+            RectTransform raiz = ConstructorDeInterfaz.Nodo(
+                "ManoJugador", padre, Vector2.zero, new Vector2(400f, 200f));
+
+            VistaMano vista = raiz.gameObject.AddComponent<VistaMano>();
+
+            List<Object> huecos = new();
+            for (int hueco = 0; hueco < Hand.Capacity; hueco++)
+            {
+                float desplazamiento = (hueco - (Hand.Capacity - 1) * 0.5f) * 150f;
+
+                Image fondo = ConstructorDeInterfaz.Panel(
+                    $"Hueco{hueco + 1}", raiz,
+                    new Vector2(desplazamiento, AlturaMano), TamanoCarta,
+                    new Color(0.15f, 0.17f, 0.24f, 1f));
+
+                fondo.gameObject.AddComponent<CanvasGroup>();
+                CartaDeMano carta = fondo.gameObject.AddComponent<CartaDeMano>();
+
+                VistaCartaMonstruo vistaCarta =
+                    Carta("Contenido", fondo.transform, Vector2.zero, conFondo: false);
+
+                ConstructorDeInterfaz.Cablear(carta,
+                    ("controlador", controlador),
+                    ("vista", vistaCarta),
+                    ("arenaPropia", arenaJugador));
+                ConstructorDeInterfaz.CablearInt(carta, "hueco", hueco);
+
+                huecos.Add(carta);
+            }
+
+            ConstructorDeInterfaz.Cablear(vista, ("controlador", controlador));
+            ConstructorDeInterfaz.CablearBool(vista, "esDelRival", false);
+            ConstructorDeInterfaz.CablearLista(vista, "huecos", huecos.ToArray());
+        }
+
+        private static VistaMarcador Marcador(
+            Transform padre, MatchController controlador)
+        {
+            RectTransform raiz = ConstructorDeInterfaz.Nodo(
+                "Marcador", padre, Vector2.zero, new Vector2(400f, 400f));
+
+            VistaMarcador vista = raiz.gameObject.AddComponent<VistaMarcador>();
+
+            Text manaRival = ConstructorDeInterfaz.Texto("ManaRival", raiz,
+                new Vector2(-700f, 300f), new Vector2(300f, 40f), "Mana: 0",
+                26, TextAnchor.MiddleLeft);
+            Text manaJugador = ConstructorDeInterfaz.Texto("ManaJugador", raiz,
+                new Vector2(-700f, -200f), new Vector2(300f, 40f), "Mana: 0",
+                26, TextAnchor.MiddleLeft);
+            Text ronda = ConstructorDeInterfaz.Texto("Ronda", raiz,
+                new Vector2(-700f, 55f), new Vector2(300f, 40f), "Ronda: 1",
+                26, TextAnchor.MiddleLeft);
+            Text turno = ConstructorDeInterfaz.Texto("Turno", raiz,
+                new Vector2(0f, 500f), new Vector2(600f, 50f), "",
+                32, TextAnchor.MiddleCenter);
+
+            Button terminar = ConstructorDeInterfaz.Boton("BotonTerminarTurno", raiz,
+                new Vector2(700f, -300f), new Vector2(260f, 70f),
+                "Terminar turno", out _);
+
+            ControlDeTurno control = controlador.GetComponent<ControlDeTurno>();
+            UnityEditor.Events.UnityEventTools.AddPersistentListener(
+                terminar.onClick, control.TerminarTurno);
+
+            ConstructorDeInterfaz.Cablear(vista,
+                ("controlador", controlador),
+                ("manaHumano", manaJugador),
+                ("manaRival", manaRival),
+                ("ronda", ronda),
+                ("turno", turno),
+                ("terminarTurno", terminar));
+
+            return vista;
+        }
+
+        private static void Resultado(Transform padre, MatchController controlador)
+        {
+            RectTransform raiz = ConstructorDeInterfaz.Nodo(
+                "Resultado", padre, Vector2.zero, Vector2.zero);
+
+            VistaResultado vista = raiz.gameObject.AddComponent<VistaResultado>();
+
+            Image panel = ConstructorDeInterfaz.Panel("Panel", raiz,
+                Vector2.zero, new Vector2(640f, 340f),
+                new Color(0.06f, 0.07f, 0.11f, 0.96f));
+
+            Text titulo = ConstructorDeInterfaz.Texto("Titulo", panel.transform,
+                new Vector2(0f, 90f), new Vector2(600f, 70f), "", 48);
+            Text detalle = ConstructorDeInterfaz.Texto("Detalle", panel.transform,
+                new Vector2(0f, 10f), new Vector2(560f, 80f), "", 24);
+
+            Button revancha = ConstructorDeInterfaz.Boton("BotonRevancha",
+                panel.transform, new Vector2(0f, -100f), new Vector2(260f, 70f),
+                "Otra partida", out _);
+
+            panel.gameObject.SetActive(false);
+
+            ConstructorDeInterfaz.Cablear(vista,
+                ("controlador", controlador),
+                ("panel", panel.gameObject),
+                ("titulo", titulo),
+                ("detalle", detalle),
+                ("revancha", revancha));
+        }
+
+        private static void CablearControlador(
+            MatchController controlador,
+            VistaArena arenaJugador,
+            VistaArena arenaRival,
+            VistaMarcador marcador)
+        {
+            ReproductorDeCombate reproductor =
+                controlador.GetComponent<ReproductorDeCombate>();
+            ControlDeTurno control = controlador.GetComponent<ControlDeTurno>();
+
+            ConstructorDeInterfaz.Cablear(reproductor,
+                ("arenaHumano", arenaJugador),
+                ("arenaRival", arenaRival));
+
+            ConstructorDeInterfaz.Cablear(control,
+                ("controlador", controlador),
+                ("reproductor", reproductor));
+        }
+
+        /// <summary>Carta dibujada: fondo, arte y los cinco numeros.</summary>
+        private static VistaCartaMonstruo Carta(
+            string nombre, Transform padre, Vector2 posicion, bool conFondo = true)
+        {
+            RectTransform raiz = conFondo
+                ? ConstructorDeInterfaz.Panel(nombre, padre, posicion, TamanoCarta,
+                    new Color(0.15f, 0.17f, 0.24f, 1f), recibeClics: false)
+                    .rectTransform
+                : ConstructorDeInterfaz.Nodo(nombre, padre, posicion, TamanoCarta);
+
+            VistaCartaMonstruo vista =
+                raiz.gameObject.AddComponent<VistaCartaMonstruo>();
+
+            Image arte = ConstructorDeInterfaz.Panel("Arte", raiz,
+                new Vector2(0f, 18f), new Vector2(112f, 96f), Color.white,
+                recibeClics: false);
+            arte.preserveAspect = true;
+
+            Text nombreCarta = ConstructorDeInterfaz.Texto("Nombre", raiz,
+                new Vector2(0f, 76f), new Vector2(126f, 26f), "", 16);
+            Text mana = ConstructorDeInterfaz.Texto("Mana", raiz,
+                new Vector2(-48f, 76f), new Vector2(30f, 26f), "", 20);
+            Text ataque = ConstructorDeInterfaz.Texto("Ataque", raiz,
+                new Vector2(-44f, -64f), new Vector2(36f, 28f), "", 22);
+            Text cura = ConstructorDeInterfaz.Texto("Cura", raiz,
+                new Vector2(0f, -64f), new Vector2(36f, 28f), "", 22);
+            Text vida = ConstructorDeInterfaz.Texto("Vida", raiz,
+                new Vector2(44f, -64f), new Vector2(36f, 28f), "", 22);
+
+            ConstructorDeInterfaz.Cablear(vista,
+                ("nombre", nombreCarta),
+                ("ataque", ataque),
+                ("mana", mana),
+                ("cura", cura),
+                ("vida", vida),
+                ("arte", arte));
+
+            return vista;
+        }
+
+        private static void AnadirABuildSettings()
+        {
+            List<EditorBuildSettingsScene> escenas = new(EditorBuildSettings.scenes);
+
+            if (escenas.Exists(e => e.path == RutaEscena))
+            {
+                return;
+            }
+
+            escenas.Insert(0, new EditorBuildSettingsScene(RutaEscena, enabled: true));
+            EditorBuildSettings.scenes = escenas.ToArray();
+        }
+    }
+}

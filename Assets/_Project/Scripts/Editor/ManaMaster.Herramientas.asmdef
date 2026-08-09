@@ -1,0 +1,20 @@
+{
+    "name": "ManaMaster.Herramientas",
+    "rootNamespace": "ManaMaster.Herramientas",
+    "references": [
+        "ManaMaster.Core",
+        "ManaMaster.Unity",
+        "Unity.InputSystem"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
