@@ -46,6 +46,13 @@ namespace ManaMaster.Unity.Duelo
 
         private IMatchAgent _agenteRival;
 
+        /// <summary>
+        /// Avisos en pausa mientras se reproduce el combate. Sin esto las vistas
+        /// saltarian al estado final en cuanto se resuelve, y el golpe a golpe
+        /// que viene despues seria un rebobinado a la vista del jugador.
+        /// </summary>
+        private int _avisosSuspendidos;
+
         /// <summary>Partida en curso, o null si todavia no ha empezado.</summary>
         public MatchState Partida { get; private set; }
 
@@ -57,6 +64,12 @@ namespace ManaMaster.Unity.Duelo
         public int SemillaEnUso { get; private set; }
 
         public bool HayPartida => Partida != null;
+
+        /// <summary>
+        /// La partida esta en mitad de algo (tipicamente la animacion del
+        /// combate) y no debe aceptar jugadas.
+        /// </summary>
+        public bool Ocupado => _avisosSuspendidos > 0;
 
         public bool EsTurnoDelHumano
             => HayPartida && !Partida.Terminada
@@ -170,9 +183,24 @@ namespace ManaMaster.Unity.Duelo
         /// </remarks>
         public IReadOnlyList<EventoCombate> JugarTurnoDelRival()
         {
+            JugarJugadasDelRival();
+
+            return TerminarTurno();
+        }
+
+        /// <summary>
+        /// Solo la fase principal del rival: despliega y sacrifica, pero no
+        /// cierra el turno.
+        /// </summary>
+        /// <remarks>
+        /// Va separado de <see cref="TerminarTurno"/> para que quien anima el
+        /// combate pueda fotografiar las arenas justo antes de resolverlo.
+        /// </remarks>
+        public void JugarJugadasDelRival()
+        {
             if (!HayPartida || Partida.Terminada || EsTurnoDelHumano)
             {
-                return Array.Empty<EventoCombate>();
+                return;
             }
 
             // Tope de seguridad: una IA con un fallo no debe colgar el juego.
@@ -195,12 +223,32 @@ namespace ManaMaster.Unity.Duelo
 
                 break;
             }
+        }
 
-            return TerminarTurno();
+        /// <summary>
+        /// Deja de avisar a las vistas hasta que se llame a
+        /// <see cref="ReanudarAvisos"/>. Se puede anidar.
+        /// </summary>
+        public void SuspenderAvisos() => _avisosSuspendidos++;
+
+        /// <summary>Vuelve a avisar a las vistas y las pone al dia.</summary>
+        public void ReanudarAvisos()
+        {
+            _avisosSuspendidos = Mathf.Max(0, _avisosSuspendidos - 1);
+
+            if (_avisosSuspendidos == 0)
+            {
+                Avisar();
+            }
         }
 
         private void Avisar()
         {
+            if (_avisosSuspendidos > 0)
+            {
+                return;
+            }
+
             PartidaCambiada?.Invoke();
 
             if (Partida != null && Partida.Terminada)

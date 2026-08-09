@@ -26,15 +26,32 @@ namespace ManaMaster.Unity.Duelo
         [Header("Arte")]
         [SerializeField] private Image arte;
 
+        /// <summary>
+        /// Vida a mostrar en lugar de la actual, o null para usar la real.
+        /// </summary>
+        /// <remarks>
+        /// Lo usa el reproductor de combate: cuando el log llega a la interfaz
+        /// las vidas ya son las finales, asi que para enseñar el golpe a golpe
+        /// hay que poder pintar una vida pasada.
+        /// </remarks>
+        private int? _vidaForzada;
+
         /// <summary>Carta representada, o null si el hueco esta vacio.</summary>
         public CardInstance Carta { get; private set; }
 
         public bool TieneCarta => Carta != null;
 
-        /// <summary>Muestra la carta y enciende el objeto.</summary>
-        public void Mostrar(CardInstance carta)
+        /// <summary>Muestra la carta con su vida real y enciende el objeto.</summary>
+        public void Mostrar(CardInstance carta) => Mostrar(carta, null);
+
+        /// <summary>Muestra la carta con una vida concreta, no la actual.</summary>
+        public void MostrarConVida(CardInstance carta, int vidaMostrada)
+            => Mostrar(carta, vidaMostrada);
+
+        private void Mostrar(CardInstance carta, int? vidaMostrada)
         {
             Carta = carta;
+            _vidaForzada = vidaMostrada;
 
             if (carta == null)
             {
@@ -50,6 +67,7 @@ namespace ManaMaster.Unity.Duelo
         public void Ocultar()
         {
             Carta = null;
+            _vidaForzada = null;
             gameObject.SetActive(false);
         }
 
@@ -70,7 +88,7 @@ namespace ManaMaster.Unity.Duelo
             Escribir(ataque, definicion.Attack.ToString());
             Escribir(mana, definicion.ManaCost.ToString());
             Escribir(cura, definicion.HealPerTurn.ToString());
-            Escribir(vida, Carta.CurrentHealth.ToString());
+            Escribir(vida, (_vidaForzada ?? Carta.CurrentHealth).ToString());
 
             if (arte == null)
             {

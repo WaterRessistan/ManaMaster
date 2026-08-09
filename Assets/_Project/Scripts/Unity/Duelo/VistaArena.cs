@@ -1,4 +1,6 @@
+using System.Collections.Generic;
 using ManaMaster.Core.Board;
+using ManaMaster.Core.Cards;
 using ManaMaster.Core.Match;
 using UnityEngine;
 
@@ -63,6 +65,45 @@ namespace ManaMaster.Unity.Duelo
                 }
 
                 zona.Vista.Mostrar(jugador.Arena[carril]);
+            }
+        }
+
+        /// <summary>
+        /// Dibuja un instante concreto del combate en lugar del estado actual.
+        /// </summary>
+        /// <remarks>
+        /// Los monstruos llegan ya en orden de carril y sin huecos, asi que la
+        /// compactacion se ve sola: al desaparecer el del carril 1, el que
+        /// venia detras pasa a ocupar su sitio en el fotograma siguiente.
+        /// </remarks>
+        public void MostrarFotograma(
+            IReadOnlyList<CardInstance> monstruos,
+            IReadOnlyDictionary<CardInstance, int> vidas)
+        {
+            for (int carril = 0; carril < carriles.Length; carril++)
+            {
+                CarrilDeInsercion zona = carriles[carril];
+                if (zona == null || zona.Vista == null)
+                {
+                    continue;
+                }
+
+                CardInstance monstruo =
+                    monstruos != null && carril < monstruos.Count
+                        ? monstruos[carril]
+                        : null;
+
+                if (monstruo == null)
+                {
+                    zona.Vista.Ocultar();
+                    continue;
+                }
+
+                int vida = vidas != null && vidas.TryGetValue(monstruo, out int guardada)
+                    ? guardada
+                    : monstruo.CurrentHealth;
+
+                zona.Vista.MostrarConVida(monstruo, vida);
             }
         }
 
