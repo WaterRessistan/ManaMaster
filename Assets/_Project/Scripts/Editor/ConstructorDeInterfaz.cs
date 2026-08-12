@@ -178,5 +178,13 @@ namespace ManaMaster.Herramientas
             serializado.FindProperty(campo).intValue = valor;
             serializado.ApplyModifiedPropertiesWithoutUndo();
         }
+
+        /// <summary>Asigna una cadena a un campo privado.</summary>
+        public static void CablearString(Object destino, string campo, string valor)
+        {
+            SerializedObject serializado = new(destino);
+            serializado.FindProperty(campo).stringValue = valor;
+            serializado.ApplyModifiedPropertiesWithoutUndo();
+        }
     }
 }
