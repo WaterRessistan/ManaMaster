@@ -65,7 +65,7 @@ namespace ManaMaster.Herramientas
                 lienzo.transform, controlador, esDelRival: false);
 
             Mano(lienzo.transform, controlador, arenaJugador);
-            ManoDeObjetos(lienzo.transform, controlador);
+            ManoDeObjetos(lienzo.transform, controlador, arenaJugador);
             VistaMarcador marcador = Marcador(lienzo.transform, controlador);
             Resultado(lienzo.transform, controlador);
 
@@ -232,7 +232,8 @@ namespace ManaMaster.Herramientas
         /// <c>MatchController.Comenzar</c>), asi que no hace falta ocultarla
         /// como se hace con la mano de monstruos del rival.
         /// </summary>
-        private static void ManoDeObjetos(Transform padre, MatchController controlador)
+        private static void ManoDeObjetos(
+            Transform padre, MatchController controlador, VistaArena arenaJugador)
         {
             RectTransform raiz = ConstructorDeInterfaz.Nodo(
                 "ManoDeObjetos", padre, new Vector2(560f, AlturaMano), new Vector2(260f, 200f));
@@ -259,7 +260,8 @@ namespace ManaMaster.Herramientas
 
                 ConstructorDeInterfaz.Cablear(carta,
                     ("controlador", controlador),
-                    ("vista", vistaObjeto));
+                    ("vista", vistaObjeto),
+                    ("arenaPropia", arenaJugador));
                 ConstructorDeInterfaz.CablearInt(carta, "hueco", hueco);
 
                 huecos.Add(carta);
@@ -335,8 +337,8 @@ namespace ManaMaster.Herramientas
             BotonDeNavegacion navegacion =
                 volverAlMenu.gameObject.AddComponent<BotonDeNavegacion>();
             ConstructorDeInterfaz.CablearString(navegacion, "nombreEscena", "Inicio");
-            UnityEditor.Events.UnityEventTools.AddPersistentListener(
-                volverAlMenu.onClick, navegacion.Ir);
+            // Sin AddPersistentListener: BotonDeNavegacion ya se cablea solo
+            // en OnEnable (mismo motivo que en ConstructorDeEscenaInicio).
 
             panel.gameObject.SetActive(false);
 

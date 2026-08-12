@@ -67,8 +67,9 @@ namespace ManaMaster.Herramientas
 
             BotonDeNavegacion navegacion = boton.gameObject.AddComponent<BotonDeNavegacion>();
             ConstructorDeInterfaz.CablearString(navegacion, "nombreEscena", nombreEscenaDestino);
-            UnityEditor.Events.UnityEventTools.AddPersistentListener(
-                boton.onClick, navegacion.Ir);
+            // Sin AddPersistentListener: BotonDeNavegacion ya se cablea solo
+            // en OnEnable. Anadirlo aqui tambien disparaba Ir() dos veces por
+            // clic (doble carga de escena en cada navegacion real).
         }
 
         /// <summary>

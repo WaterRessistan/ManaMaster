@@ -131,5 +131,31 @@ namespace ManaMaster.Unity.Duelo
                 zona.Resaltar(valido);
             }
         }
+
+        /// <summary>
+        /// Enciende la marca en los carriles donde el objeto que se esta
+        /// arrastrando se puede equipar: los que tienen un monstruo propio
+        /// que todavia no lleva ninguno (DESIGN.md §4). No es la misma regla
+        /// que <see cref="ResaltarPosicionesValidas"/>: ahi lo que importa es
+        /// donde puede entrar un monstruo nuevo, aqui donde ya hay uno libre.
+        /// </summary>
+        public void ResaltarCarrilesParaEquipar(bool encendido)
+        {
+            PlayerState jugador = Propietario;
+
+            for (int carril = 0; carril < carriles.Length; carril++)
+            {
+                CarrilDeInsercion zona = carriles[carril];
+                if (zona == null)
+                {
+                    continue;
+                }
+
+                CardInstance monstruo = jugador?.Arena[carril];
+                bool valido = encendido && monstruo != null && monstruo.EquippedItem == null;
+
+                zona.Resaltar(valido);
+            }
+        }
     }
 }

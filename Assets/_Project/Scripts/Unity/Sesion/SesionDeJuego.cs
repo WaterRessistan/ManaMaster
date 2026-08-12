@@ -262,7 +262,8 @@ namespace ManaMaster.Unity.Sesion
                 }
             }
 
-            OtorgarColeccionYMazoInicial(monstruos, _mazoHumano);
+            OtorgarColeccionYMazoInicial(
+                monstruos, _mazoHumano, ConstructorDeMazos.CartasPorMazo);
 
             List<string> objetos = new();
             foreach (ItemCardDefinition objeto in catalogo.Items)
@@ -273,16 +274,18 @@ namespace ManaMaster.Unity.Sesion
                 }
             }
 
-            OtorgarColeccionYMazoInicial(objetos, _mazoObjetos);
+            OtorgarColeccionYMazoInicial(
+                objetos, _mazoObjetos, ConstructorDeMazos.CartasPorMazoDeObjetos);
         }
 
         /// <summary>
         /// Da 1 copia de cada carta y, si con eso no llega a un mazo
         /// completo, reparte copias extra en rondas (hasta el maximo de 2)
-        /// para dejar un mazo jugable de <see cref="ConstructorDeMazos.CartasPorMazo"/>
+        /// para dejar un mazo jugable de <paramref name="tamanoMazo"/>
         /// cartas, sin importar cuantas distintas haya en el catalogo.
         /// </summary>
-        private void OtorgarColeccionYMazoInicial(List<string> cardIds, List<string> mazoDestino)
+        private void OtorgarColeccionYMazoInicial(
+            List<string> cardIds, List<string> mazoDestino, int tamanoMazo)
         {
             if (cardIds.Count == 0)
             {
@@ -290,13 +293,13 @@ namespace ManaMaster.Unity.Sesion
             }
 
             for (int copia = 0;
-                 mazoDestino.Count < ConstructorDeMazos.CartasPorMazo
+                 mazoDestino.Count < tamanoMazo
                  && copia < ConstructorDeMazos.MaxCopiasPorCarta;
                  copia++)
             {
                 foreach (string cardId in cardIds)
                 {
-                    if (mazoDestino.Count >= ConstructorDeMazos.CartasPorMazo)
+                    if (mazoDestino.Count >= tamanoMazo)
                     {
                         break;
                     }

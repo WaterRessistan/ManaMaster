@@ -137,6 +137,15 @@ namespace ManaMaster.Unity.Duelo
         /// El mazo del humano viene de la sesion si eligio uno en deckbuild;
         /// si no, se genera al azar como hasta ahora.
         /// </summary>
+        /// <remarks>
+        /// El guardado local no se protege contra manipulacion (Fase 4/9): si
+        /// el JSON quedo de un catalogo distinto o con un tamano invalido,
+        /// <see cref="ConstructorDeMazos.DesdeSeleccion"/> lanza
+        /// <see cref="System.ArgumentException"/>. En vez de tumbar
+        /// <c>Start()</c> a medias y dejar la escena de duelo vacia sin
+        /// ningun aviso, se cae al mismo reparto aleatorio que cuando no hay
+        /// mazo elegido.
+        /// </remarks>
         private Deck MazoDelHumano(IRandom azar)
         {
             if (sesion == null || !sesion.TieneMazoElegido)
@@ -144,18 +153,29 @@ namespace ManaMaster.Unity.Duelo
                 return ConstructorDeMazos.Aleatorio(catalogo, azar, cartasPorMazo);
             }
 
-            Deck mazo = ConstructorDeMazos.DesdeSeleccion(catalogo, sesion.MazoHumano);
+            try
+            {
+                Deck mazo = ConstructorDeMazos.DesdeSeleccion(catalogo, sesion.MazoHumano);
 
-            // Llega en el orden en que se eligio en deckbuild: barajarlo evita
-            // que ese orden filtre la mano inicial.
-            mazo.Shuffle(azar);
+                // Llega en el orden en que se eligio en deckbuild: barajarlo evita
+                // que ese orden filtre la mano inicial.
+                mazo.Shuffle(azar);
 
-            return mazo;
+                return mazo;
+            }
+            catch (System.ArgumentException excepcion)
+            {
+                Debug.LogError(
+                    $"[MatchController] El mazo guardado en la sesion no es " +
+                    $"valido, se reparte uno al azar: {excepcion.Message}", this);
+                return ConstructorDeMazos.Aleatorio(catalogo, azar, cartasPorMazo);
+            }
         }
 
         /// <summary>
         /// El mazo de objetos del humano viene de la sesion si eligio uno en
         /// deckbuild; si no, se genera al azar, igual que el de monstruos.
+        /// Mismo motivo que <see cref="MazoDelHumano"/> para el try/catch.
         /// </summary>
         private ItemDeck MazoDeObjetosDelHumano(IRandom azar)
         {
@@ -165,10 +185,21 @@ namespace ManaMaster.Unity.Duelo
                     catalogo, azar, ConstructorDeMazos.CartasPorMazoDeObjetos);
             }
 
-            ItemDeck mazo = ConstructorDeMazos.ObjetosDesdeSeleccion(catalogo, sesion.MazoObjetos);
-            mazo.Shuffle(azar);
+            try
+            {
+                ItemDeck mazo = ConstructorDeMazos.ObjetosDesdeSeleccion(catalogo, sesion.MazoObjetos);
+                mazo.Shuffle(azar);
 
-            return mazo;
+                return mazo;
+            }
+            catch (System.ArgumentException excepcion)
+            {
+                Debug.LogError(
+                    $"[MatchController] El mazo de objetos guardado en la " +
+                    $"sesion no es valido, se reparte uno al azar: {excepcion.Message}", this);
+                return ConstructorDeMazos.ObjetosAleatorio(
+                    catalogo, azar, ConstructorDeMazos.CartasPorMazoDeObjetos);
+            }
         }
 
         /// <summary>Equipa un objeto de la mano del jugador activo (DESIGN.md §4).</summary>

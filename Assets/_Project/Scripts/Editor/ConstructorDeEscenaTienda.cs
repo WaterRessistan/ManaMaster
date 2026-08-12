@@ -136,9 +136,10 @@ namespace ManaMaster.Herramientas
                 ("carta", carta),
                 ("catalogo", catalogo));
 
-            UnityEditor.Events.UnityEventTools.AddPersistentListener(
-                comprar.onClick, vista.Comprar);
-
+            // "comprar" no lleva AddPersistentListener: VistaOfertaTienda ya se
+            // cablea sola en OnEnable. Anadirlo aqui tambien duplicaba la
+            // llamada (doble cobro, doble copia) en cada clic real de boton,
+            // invisible a los tests porque llaman a Comprar() directamente.
             vista.Mostrar(etiqueta);
 
             return vista;
@@ -161,8 +162,8 @@ namespace ManaMaster.Herramientas
 
             BotonDeNavegacion navegacion = volver.gameObject.AddComponent<BotonDeNavegacion>();
             ConstructorDeInterfaz.CablearString(navegacion, "nombreEscena", "Inicio");
-            UnityEditor.Events.UnityEventTools.AddPersistentListener(
-                volver.onClick, navegacion.Ir);
+            // Sin AddPersistentListener: BotonDeNavegacion ya se cablea solo
+            // en OnEnable (ver el comentario de Oferta() mas arriba).
         }
     }
 }

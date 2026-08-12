@@ -23,6 +23,9 @@ namespace ManaMaster.Unity.Duelo
 
         [SerializeField] private VistaCartaObjeto vista;
 
+        [Tooltip("Arena propia, para resaltar los carriles donde se puede equipar al arrastrar.")]
+        [SerializeField] private VistaArena arenaPropia;
+
         private RectTransform _rect;
         private CanvasGroup _grupo;
         private Canvas _lienzo;
@@ -58,6 +61,11 @@ namespace ManaMaster.Unity.Duelo
 
             transform.SetParent(_lienzo.transform, worldPositionStays: true);
             transform.SetAsLastSibling();
+
+            if (arenaPropia != null)
+            {
+                arenaPropia.ResaltarCarrilesParaEquipar(true);
+            }
         }
 
         public void OnDrag(PointerEventData eventData)
@@ -82,6 +90,11 @@ namespace ManaMaster.Unity.Duelo
 
             transform.SetParent(_padreOriginal, worldPositionStays: false);
             _rect.anchoredPosition = _posicionOriginal;
+
+            if (arenaPropia != null)
+            {
+                arenaPropia.ResaltarCarrilesParaEquipar(false);
+            }
         }
 
         private bool PuedeArrastrarse()
@@ -92,7 +105,7 @@ namespace ManaMaster.Unity.Duelo
                 return false;
             }
 
-            if (controlador == null || !controlador.EsTurnoDelHumano)
+            if (controlador == null || !controlador.EsTurnoDelHumano || controlador.Ocupado)
             {
                 return false;
             }

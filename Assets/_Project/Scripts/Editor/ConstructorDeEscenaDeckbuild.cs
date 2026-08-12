@@ -230,8 +230,8 @@ namespace ManaMaster.Herramientas
                 new Vector2(-820f, 460f), new Vector2(200f, 60f), "Cancelar", out _);
             BotonDeNavegacion navegacion = cancelar.gameObject.AddComponent<BotonDeNavegacion>();
             ConstructorDeInterfaz.CablearString(navegacion, "nombreEscena", "Inicio");
-            UnityEditor.Events.UnityEventTools.AddPersistentListener(
-                cancelar.onClick, navegacion.Ir);
+            // Sin AddPersistentListener: BotonDeNavegacion ya se cablea solo
+            // en OnEnable (mismo motivo que en ConstructorDeEscenaInicio).
         }
 
         /// <summary>Carta dibujada: fondo, arte y los cinco numeros.</summary>

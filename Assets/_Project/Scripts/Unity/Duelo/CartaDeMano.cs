@@ -107,7 +107,7 @@ namespace ManaMaster.Unity.Duelo
                 return false;
             }
 
-            if (controlador == null || !controlador.EsTurnoDelHumano)
+            if (controlador == null || !controlador.EsTurnoDelHumano || controlador.Ocupado)
             {
                 return false;
             }
