@@ -21,16 +21,19 @@ Partidas cortas, al estilo del original: una batalla en pocos minutos.
 
 ## 2. Tablero
 
-Tres carriles por bando, con roles distintos:
+Tres carriles por bando, con roles distintos. Cada bando ocupa **una sola
+fila**, con el principal centrado entre los dos traseros:
 
 ```
-        RIVAL
-   [3] [2]  ← traseros (rango)
-      [1]   ← principal (melee)
- ─────────────────────────────
-      [1]   ← principal (melee)
-   [2] [3]  ← traseros (rango)
-        TÚ
+              RIVAL
+   [3]        [1]        [2]
+ traseros   principal   traseros
+ (rango)     (melee)     (rango)
+ ───────────────────────────────
+   [2]        [1]        [3]
+ traseros   principal   traseros
+ (rango)     (melee)     (rango)
+              TÚ
 ```
 
 - **Máximo 3 monstruos** desplegados por jugador.
@@ -118,6 +121,13 @@ atacar a distancia desde el carril 1").
   —no forma parte de esta tanda—, y los sobres de la Tienda solo dan
   monstruos: los objetos se venden sueltos.
 
+**Pociones.** Un objeto puede marcarse como poción (hoy, los que solo dan
+bonus de vida máxima). Una poción **no ocupa el hueco de objeto** del
+monstruo: se aplica al momento y no cuenta para "máximo un objeto", así que
+un monstruo puede llevar una poción y además un objeto normal, en cualquier
+orden, y ni una ni otro se bloquean entre sí. Tampoco tiene tope de usos: se
+puede aplicar más de una poción al mismo monstruo, y cada una suma.
+
 ---
 
 ## 5. Estructura del turno
@@ -172,7 +182,9 @@ recalcula su objetivo sobre el tablero **ya compactado**.
 
 - Se aplica **antes** de todos los ataques.
 - El curandero cura a **cada** aliado en arena, **incluido él mismo**.
-- **No puede superar la vida máxima** del monstruo.
+- **No puede superar la vida máxima** del monstruo (lo garantiza el motor:
+  `CardInstance.ReceiveHealing` recorta la curación a lo que falte para
+  llegar al máximo, por muchas veces que se aplique).
 - Solo mientras el curandero esté en la arena.
 
 ---
@@ -214,20 +226,25 @@ Un jugador pierde cuando:
 
 No existe vida de héroe: toda la presión del juego viene de perder monstruos.
 
-### Empate
+### Empate: válvula de seguridad, no un desenlace de diseño
 
-La partida termina **en tablas al cumplirse la ronda 60**, sin ganador.
+Las dos condiciones de arriba son las únicas formas **previstas** de terminar
+una partida. No hay tablas por diseño.
 
-Es una salida de emergencia para una situación rara pero posible: con las dos
-arenas llenas nadie puede desplegar, y si la curación iguala al daño que se
-hacen, ningún monstruo muere y la partida no acaba nunca. Simulando 2.000
-partidas aparece en un **0,45 %** de los casos.
+Existe, aun así, un tope técnico de **300 rondas** que fuerza el fin de la
+partida si se llega hasta ahí, para cubrir una situación rara pero posible:
+con las dos arenas llenas nadie puede desplegar, y si la curación iguala al
+daño que se hacen, ningún monstruo muere y la partida no acabaría nunca.
+Simulando 2.000 partidas con el roster anterior (varios curanderos)
+aparecía en un 0,45 % de los casos; con un solo curandero en el roster
+(§13) esa coincidencia exacta es todavía más improbable. En la práctica un
+jugador no debería llegar nunca a verlo.
 
-> El límite de 60 está medido, no elegido a ojo: en esas 2.000 partidas, las que
-> sí se deciden duran entre 11 y 36 rondas (mediana 18). El tope deja más del
-> doble de margen sobre la partida más larga observada. **Hay que volver a
-> medirlo en la fase de balanceo**, cuando las estadísticas de las cartas sean
-> las definitivas.
+> El límite anterior era 60, medido para que las partidas normales (que
+> duran entre 11 y 36 rondas) tuvieran de sobra margen. Se subió a 300 al
+> dejar de tratarse como un desenlace normal: ahora solo importa que sea
+> lo bastante alto para no colgar la partida en el caso extremo, no que sea
+> ajustado.
 
 > 📌 El documento original decía *"ganará el jugador que se quede sin cartas"*. Es
 > una errata: **pierde**.

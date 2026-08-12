@@ -178,12 +178,10 @@ namespace ManaMaster.Core.Match
         /// el mana para desplegar ninguno.
         /// </summary>
         /// <remarks>
-        /// OJO: implementada al pie de la letra del §9, y tal cual escrita es
-        /// dudosa. Como el mana se acumula sin tope (§7), un jugador al que hoy
-        /// no le llega si tendra suficiente dentro de un turno o dos, asi que
-        /// esta regla no distingue "sin salida" de "temporalmente corto": con la
-        /// mano llena de cartas caras se pierde en la ronda 1. Pendiente de
-        /// decidir si debe exigir ademas que la mano este vacia.
+        /// Implementada al pie de la letra del §9 a proposito: aunque el mana se
+        /// acumule sin tope (§7) y un jugador corto de mana hoy pueda tenerlo
+        /// manana, la regla no distingue "sin salida" de "temporalmente corto" —
+        /// es la interpretacion confirmada, no un descuido.
         /// </remarks>
         private void ComprobarDerrotaPorAhogo()
         {
