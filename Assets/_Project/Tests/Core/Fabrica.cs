@@ -31,9 +31,25 @@ namespace ManaMaster.Core.Tests
                 CanAttackRanged = rango
             });
 
+        /// <summary>Un objeto con nombre y bonus, para poder seguirlo en los tests.</summary>
+        public static IItemCard Objeto(
+            string nombre, int bonusAtaque = 0, int bonusVida = 0, int bonusCura = 0)
+            => new ObjetoDePrueba
+            {
+                CardId = nombre,
+                DisplayName = nombre,
+                BonusAttack = bonusAtaque,
+                BonusMaxHealth = bonusVida,
+                BonusHealPerTurn = bonusCura
+            };
+
         /// <summary>Mazo con los monstruos dados, en ese orden.</summary>
         public static Deck Mazo(params CardInstance[] monstruos)
             => new(monstruos ?? new CardInstance[0]);
+
+        /// <summary>Mazo de objetos con los dados, en ese orden.</summary>
+        public static ItemDeck MazoDeObjetos(params IItemCard[] objetos)
+            => new(objetos ?? new IItemCard[0]);
 
         /// <summary>Mazo de monstruos identicos numerados, para rellenar.</summary>
         public static Deck MazoDe(int cartas, int coste = 1)

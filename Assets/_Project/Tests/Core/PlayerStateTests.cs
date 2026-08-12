@@ -181,5 +181,95 @@ namespace ManaMaster.Core.Tests
 
             Assert.That(jugador.PuedeDesplegarAlguna(), Is.False);
         }
+
+        // ------------------------------------------------------------------
+        // Objetos (DESIGN.md §4)
+        // ------------------------------------------------------------------
+
+        [Test]
+        public void SinIniciarObjetosLaManoDeObjetosEstaVacia()
+        {
+            PlayerState jugador = new("Ana", Fabrica.MazoDe(10));
+
+            Assert.That(jugador.ManoDeObjetos.IsEmpty, Is.True);
+            Assert.That(jugador.MazoDeObjetos.IsEmpty, Is.True);
+        }
+
+        [Test]
+        public void IniciarObjetosRepartaLaPrimeraMano()
+        {
+            PlayerState jugador = new("Ana", Fabrica.MazoDe(10));
+
+            jugador.IniciarObjetos(Fabrica.MazoDeObjetos(
+                Fabrica.Objeto("Espada"), Fabrica.Objeto("Escudo"), Fabrica.Objeto("Amuleto")));
+
+            Assert.That(jugador.ManoDeObjetos.Count, Is.EqualTo(2));
+            Assert.That(jugador.MazoDeObjetos.Count, Is.EqualTo(1));
+        }
+
+        [Test]
+        public void IniciarObjetosSinMazoEsUnError()
+        {
+            PlayerState jugador = new("Ana", Fabrica.MazoDe(10));
+
+            Assert.That(() => jugador.IniciarObjetos(null), Throws.ArgumentNullException);
+        }
+
+        [Test]
+        public void EquiparConsumeElHuecoDeLaManoYLaRellena()
+        {
+            PlayerState jugador = Fabrica.Jugador("Ana", Fabrica.Monstruo("Bruto"));
+            jugador.IniciarObjetos(Fabrica.MazoDeObjetos(
+                Fabrica.Objeto("Espada"), Fabrica.Objeto("Escudo"), Fabrica.Objeto("Amuleto")));
+
+            ResultadoEquipar resultado = jugador.TryEquipar(huecoManoObjeto: 0, carril: 0);
+
+            Assert.That(resultado, Is.EqualTo(ResultadoEquipar.Ok));
+            Assert.That(jugador.Arena[0].EquippedItem?.CardId, Is.EqualTo("Espada"));
+            Assert.That(jugador.ManoDeObjetos.Count, Is.EqualTo(2), "el hueco se rellena al momento");
+            Assert.That(jugador.MazoDeObjetos.Count, Is.EqualTo(0));
+        }
+
+        [Test]
+        public void EquiparConUnHuecoDeManoVacioNoHaceNada()
+        {
+            PlayerState jugador = Fabrica.Jugador("Ana", Fabrica.Monstruo("Bruto"));
+            jugador.IniciarObjetos(Fabrica.MazoDeObjetos(Fabrica.Objeto("Espada")));
+            jugador.TryEquipar(0, 0);   // vacia el unico hueco con objeto
+
+            ResultadoEquipar resultado = jugador.TryEquipar(huecoManoObjeto: 1, carril: 0);
+
+            Assert.That(resultado, Is.EqualTo(ResultadoEquipar.HuecoVacio));
+        }
+
+        [Test]
+        public void EquiparSobreUnCarrilVacioNoHaceNada()
+        {
+            PlayerState jugador = new("Ana", Fabrica.MazoDe(10));
+            jugador.IniciarObjetos(Fabrica.MazoDeObjetos(Fabrica.Objeto("Espada")));
+
+            ResultadoEquipar resultado = jugador.TryEquipar(huecoManoObjeto: 0, carril: 0);
+
+            Assert.That(resultado, Is.EqualTo(ResultadoEquipar.CarrilVacio));
+            Assert.That(jugador.ManoDeObjetos[0]?.CardId, Is.EqualTo("Espada"),
+                "no deberia haberse gastado el objeto");
+        }
+
+        [Test]
+        public void NoSePuedeEquiparUnSegundoObjetoAlMismoMonstruo()
+        {
+            PlayerState jugador = Fabrica.Jugador("Ana", Fabrica.Monstruo("Bruto"));
+            jugador.IniciarObjetos(Fabrica.MazoDeObjetos(
+                Fabrica.Objeto("Espada"), Fabrica.Objeto("Escudo")));
+            jugador.TryEquipar(0, 0);
+
+            // El hueco 0 quedo vacio (el mazo ya no tenia con que rellenarlo):
+            // el segundo intento usa el hueco 1, que aun tiene "Escudo".
+            ResultadoEquipar resultado = jugador.TryEquipar(huecoManoObjeto: 1, carril: 0);
+
+            Assert.That(resultado, Is.EqualTo(ResultadoEquipar.YaLlevaObjeto));
+            Assert.That(jugador.Arena[0].EquippedItem?.CardId, Is.EqualTo("Espada"),
+                "el primer objeto no se sustituye");
+        }
     }
 }

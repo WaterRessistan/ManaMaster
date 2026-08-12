@@ -99,6 +99,15 @@ namespace ManaMaster.Core.Match
             => Terminada ? -1 : Activo.TrySacrificar(carril);
 
         /// <summary>
+        /// Equipa un objeto de la mano del jugador activo sobre un monstruo
+        /// propio (DESIGN.md §4).
+        /// </summary>
+        public ResultadoEquipar Equipar(int huecoManoObjeto, int carril)
+            => Terminada
+                ? ResultadoEquipar.HuecoVacio
+                : Activo.TryEquipar(huecoManoObjeto, carril);
+
+        /// <summary>
         /// Cierra la fase principal: resuelve el combate del jugador activo y
         /// pasa el turno. Devuelve lo que ha pasado en el combate para que la
         /// vista lo reproduzca.

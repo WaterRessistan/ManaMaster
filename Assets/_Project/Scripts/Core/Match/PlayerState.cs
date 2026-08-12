@@ -41,6 +41,15 @@ namespace ManaMaster.Core.Match
         public Arena Arena { get; }
 
         /// <summary>
+        /// Mazo de objetos. Vacio por defecto: solo lo rellena de verdad
+        /// <see cref="IniciarObjetos"/>, para no romper el constructor ni los
+        /// tests que ya montan un <see cref="PlayerState"/> sin objetos.
+        /// </summary>
+        public ItemDeck MazoDeObjetos { get; private set; } = new(Array.Empty<IItemCard>());
+
+        public ItemHand ManoDeObjetos { get; } = new();
+
+        /// <summary>
         /// Cartas de monstruo que le quedan en total: mazo, mano y arena.
         /// Cuando llega a 0, este jugador ha perdido (DESIGN.md §9).
         /// </summary>
@@ -165,6 +174,47 @@ namespace ManaMaster.Core.Match
             GanarMana(manaRecuperado);
 
             return manaRecuperado;
+        }
+
+        /// <summary>
+        /// Monta el mazo de objetos de verdad y reparte la primera mano. Solo
+        /// hace falta llamarlo cuando el jugador va a usar objetos (Fase 7);
+        /// sin esta llamada, <see cref="ManoDeObjetos"/> se queda vacia.
+        /// </summary>
+        public void IniciarObjetos(ItemDeck mazo)
+        {
+            MazoDeObjetos = mazo ?? throw new ArgumentNullException(nameof(mazo));
+            ManoDeObjetos.Refill(MazoDeObjetos);
+        }
+
+        /// <summary>
+        /// Equipa un objeto de la mano sobre un monstruo propio en la arena
+        /// (DESIGN.md §4). El hueco de la mano se rellena al momento desde el
+        /// mazo, igual que al desplegar un monstruo.
+        /// </summary>
+        public ResultadoEquipar TryEquipar(int huecoManoObjeto, int carril)
+        {
+            IItemCard objeto = ManoDeObjetos[huecoManoObjeto];
+            if (objeto == null)
+            {
+                return ResultadoEquipar.HuecoVacio;
+            }
+
+            CardInstance monstruo = Arena[carril];
+            if (monstruo == null)
+            {
+                return ResultadoEquipar.CarrilVacio;
+            }
+
+            if (!monstruo.TryEquip(objeto))
+            {
+                return ResultadoEquipar.YaLlevaObjeto;
+            }
+
+            ManoDeObjetos.Take(huecoManoObjeto);
+            ManoDeObjetos.Refill(MazoDeObjetos);
+
+            return ResultadoEquipar.Ok;
         }
     }
 }

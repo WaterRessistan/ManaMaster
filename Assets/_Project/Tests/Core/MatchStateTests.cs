@@ -117,6 +117,65 @@ namespace ManaMaster.Core.Tests
             Assert.That(partida.Desplegar(0, 0),
                 Is.EqualTo(ResultadoDespliegue.HuecoVacio));
             Assert.That(partida.Sacrificar(0), Is.EqualTo(-1));
+            Assert.That(partida.Equipar(0, 0), Is.EqualTo(ResultadoEquipar.HuecoVacio));
+        }
+
+        // ------------------------------------------------------------------
+        // Objetos (DESIGN.md §4)
+        // ------------------------------------------------------------------
+
+        [Test]
+        public void EquiparDelegaEnElJugadorActivo()
+        {
+            PlayerState ana = Fabrica.Jugador("Ana", Fabrica.Monstruo("Bruto"));
+            PlayerState beto = new("Beto", Fabrica.MazoDe(10));
+            MatchState partida = new(ana, beto, new AzarFijo(0));
+            partida.Activo.IniciarObjetos(Fabrica.MazoDeObjetos(Fabrica.Objeto("Espada")));
+
+            ResultadoEquipar resultado = partida.Equipar(huecoManoObjeto: 0, carril: 0);
+
+            Assert.That(resultado, Is.EqualTo(ResultadoEquipar.Ok));
+            Assert.That(partida.Activo.Arena[0].EquippedItem?.CardId, Is.EqualTo("Espada"));
+        }
+
+        /// <summary>
+        /// Confirma que CombatResolver no necesita saber nada de objetos: lee
+        /// el ataque y la vida a traves de CardInstance, que ya incluyen el
+        /// bonus. Sin el escudo, este ataque (3) mataria a D1 (vida 2).
+        /// </summary>
+        [Test]
+        public void ElBonusDeVidaDelObjetoSeAplicaDeVerdadEnCombate()
+        {
+            PlayerState ana = Fabrica.Jugador("Ana", Fabrica.Monstruo("Bruto", ataque: 3));
+            PlayerState beto = Fabrica.Jugador("Beto", Fabrica.Monstruo("D1", vida: 2));
+            beto.Arena[0].TryEquip(Fabrica.Objeto("Escudo", bonusVida: 3));
+            MatchState partida = new(ana, beto, new AzarFijo(0));
+
+            partida.TerminarTurno();
+
+            Assert.That(beto.Arena.IsEmpty, Is.False, "el escudo deberia haberlo salvado");
+            Assert.That(beto.Arena[0].CurrentHealth, Is.EqualTo(2));
+        }
+
+        /// <summary>
+        /// El objeto no vive en ningun sitio aparte del monstruo: si el
+        /// monstruo muere en combate, el objeto se pierde con el sin que
+        /// haga falta ningun codigo extra (DESIGN.md §4).
+        /// </summary>
+        [Test]
+        public void SiElMonstruoMuereEnCombateElObjetoSePierdeConEl()
+        {
+            PlayerState ana = Fabrica.Jugador("Ana", Fabrica.Monstruo("Bruto", ataque: 10));
+            PlayerState beto = Fabrica.Jugador("Beto", Fabrica.Monstruo("D1", vida: 2));
+            beto.Arena[0].TryEquip(Fabrica.Objeto("Escudo", bonusVida: 3));
+            MatchState partida = new(ana, beto, new AzarFijo(0));
+
+            Assert.That(beto.Arena[0].EquippedItem, Is.Not.Null, "el escudo deberia estar puesto");
+
+            partida.TerminarTurno();
+
+            Assert.That(beto.Arena.IsEmpty, Is.True,
+                "el ataque (10) supera incluso la vida con escudo (5)");
         }
 
         /// <summary>

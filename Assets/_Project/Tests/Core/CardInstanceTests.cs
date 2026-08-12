@@ -153,6 +153,72 @@ namespace ManaMaster.Core.Tests
             Assert.That(normal.IsHealer, Is.False);
         }
 
+        // ------------------------------------------------------------------
+        // Objetos (DESIGN.md §4)
+        // ------------------------------------------------------------------
+
+        [Test]
+        public void EmpiezaSinObjetoEquipado()
+        {
+            CardInstance monstruo = new(new CartaDePrueba());
+
+            Assert.That(monstruo.EquippedItem, Is.Null);
+        }
+
+        [Test]
+        public void EquiparUnObjetoSumaSusBonusAlAtaqueVidaYCura()
+        {
+            CardInstance monstruo = new(new CartaDePrueba
+            {
+                MaxHealth = 5, Attack = 2, HealPerTurn = 1
+            });
+
+            bool equipado = monstruo.TryEquip(
+                Fabrica.Objeto("Espada", bonusAtaque: 2, bonusVida: 3, bonusCura: 1));
+
+            Assert.That(equipado, Is.True);
+            Assert.That(monstruo.Attack, Is.EqualTo(4));
+            Assert.That(monstruo.MaxHealth, Is.EqualTo(8));
+            Assert.That(monstruo.HealPerTurn, Is.EqualTo(2));
+        }
+
+        /// <summary>
+        /// La vida extra se nota ya mismo: no hace falta esperar a la
+        /// siguiente curacion para poder usarla.
+        /// </summary>
+        [Test]
+        public void LaVidaMaximaExtraSeSumaTambienALaVidaActualAlEquipar()
+        {
+            CardInstance monstruo = new(new CartaDePrueba { MaxHealth = 5 });
+            monstruo.ReceiveDamage(3);
+
+            monstruo.TryEquip(Fabrica.Objeto("Escudo", bonusVida: 2));
+
+            Assert.That(monstruo.CurrentHealth, Is.EqualTo(4));
+            Assert.That(monstruo.MaxHealth, Is.EqualTo(7));
+        }
+
+        /// <summary>DESIGN.md §4: como mucho un objeto, no se puede sustituir.</summary>
+        [Test]
+        public void NoSePuedeEquiparUnSegundoObjeto()
+        {
+            CardInstance monstruo = new(new CartaDePrueba());
+            IItemCard primero = Fabrica.Objeto("Espada", bonusAtaque: 1);
+            IItemCard segundo = Fabrica.Objeto("Escudo", bonusVida: 1);
+
+            Assert.That(monstruo.TryEquip(primero), Is.True);
+            Assert.That(monstruo.TryEquip(segundo), Is.False);
+            Assert.That(monstruo.EquippedItem, Is.SameAs(primero));
+        }
+
+        [Test]
+        public void EquiparSinObjetoEsUnError()
+        {
+            CardInstance monstruo = new(new CartaDePrueba());
+
+            Assert.That(() => monstruo.TryEquip(null), Throws.ArgumentNullException);
+        }
+
         /// <summary>
         /// DESIGN.md §7: el sacrificio devuelve la mitad del coste redondeando
         /// hacia abajo, asi que una carta de coste 1 no devuelve nada. Es un
