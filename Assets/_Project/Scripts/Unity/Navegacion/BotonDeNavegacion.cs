@@ -19,6 +19,8 @@ namespace ManaMaster.Unity.Navegacion
         [Tooltip("Nombre de la escena a cargar, tal como esta en Build Settings.")]
         [SerializeField] private string nombreEscena;
 
+        public string NombreEscena => nombreEscena;
+
         private Button _boton;
 
         private void Awake()

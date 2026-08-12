@@ -6,6 +6,9 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
+    path: Assets/_Project/Scenes/Inicio.unity
+    guid: 4a2b5e562277b394083ef6fbc5aea3fd
+  - enabled: 1
     path: Assets/_Project/Scenes/Duelo.unity
     guid: 8fb329a41397e974a8e70363f42d5446
   m_configObjects:
