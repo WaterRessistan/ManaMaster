@@ -101,11 +101,22 @@ objetivo válido**: simplemente no ataca.
 ### Cartas de objeto
 
 No aparecen físicamente en la arena; se aplican sobre un monstruo para darle una
-ventaja (ej. `+2 daño de rango`, permitir atacar a distancia desde el carril 1).
+ventaja (hoy, un bonus numérico a ataque, vida máxima o cura por turno; más
+adelante también habilidades especiales, como el ejemplo original de "permitir
+atacar a distancia desde el carril 1").
 
-> **Estado: Fase 7.** En la v1 existen como datos —se compran, se coleccionan y
-> forman parte del mazo de 10+10— pero **no tienen efecto en combate** y la mano de
-> objetos **permanece oculta**.
+**Reglas de equipamiento:**
+
+- **Un monstruo lleva como máximo un objeto.** No se puede sustituir ni quitar
+  una vez puesto: la única forma de perderlo es que el monstruo muera (por
+  combate o por sacrificio), y en ese caso el objeto se pierde con él.
+- Se equipa desde la mano de objetos, **gratis** (sin coste de maná): el coste
+  económico ya se pagó en diamantes al comprarlo en la Tienda.
+- Se compran con diamantes 💎 en la Tienda, se coleccionan y forman parte del
+  mazo de 10+10 (máximo 2 copias por carta, igual que los monstruos).
+- **Estado: Fase 7, implementada.** El Rival (IA) no equipa objetos todavía
+  —no forma parte de esta tanda—, y los sobres de la Tienda solo dan
+  monstruos: los objetos se venden sueltos.
 
 ---
 
@@ -115,7 +126,7 @@ ventaja (ej. `+2 daño de rango`, permitir atacar a distancia desde el carril 1)
 1. +3 de maná
 2. FASE PRINCIPAL  (el jugador actúa libremente)
      · desplegar monstruos
-     · usar objetos            [Fase 7]
+     · usar objetos
      · sacrificar monstruos propios
 3. → botón FINALIZAR TURNO
 4. FASE DE COMBATE  (automática)
@@ -266,13 +277,16 @@ no se renumeran. El **orden de ejecución** es otra cosa y va aparte.
 | **5** | Las 4 pantallas y el flujo entre ellas | 5.º | ✅ Hecha |
 | **4** | Persistencia local, colección, diamantes | 6.º | ✅ Hecha |
 | **6** | Contenido, balanceo, arte, audio | 7.º | 🔨 Siguiente |
-| **7** | Objetos y equipamiento | — | Fuera de la v1 |
+| **7** | Objetos y equipamiento | — | ✅ Hecha (adelantada) |
 | **8** | Adaptación a móvil | — | Fuera de la v1 |
 | **9** | Online y backend | — | Fuera de la v1 |
 
 **La v1 son las fases 0 a 6.** La 5 se adelanta a la 4 porque la persistencia
 guarda mazos y colección, y esas pantallas son las que definen qué hay que
-guardar: hacerla antes obliga a rehacer el formato de guardado.
+guardar: hacerla antes obliga a rehacer el formato de guardado. La 7 estaba
+marcada "fuera de la v1", pero se adelantó a petición explícita del usuario
+antes de cerrar la 6; el resto de fases fuera de la v1 (8 y 9) siguen sin
+tocar.
 
 ---
 
@@ -307,9 +321,11 @@ guardar: hacerla antes obliga a rehacer el formato de guardado.
 ## 13. Puntos abiertos
 
 - Precio y contenido exactos de los sobres (valores provisionales en §10).
-- Reparto de rarezas del set de cartas actual. Hoy hay 10 monstruos (5 comunes,
-  4 raras, 1 épica, **0 legendarias**) y **ninguna carta de objeto**, así que el
-  mazo de 10+10 del §8 todavía no se puede construir.
+- Reparto de rarezas del set de cartas actual. Hoy hay 9 monstruos (4 comunes,
+  4 raras, 0 épicas, 1 legendaria) y 5 cartas de objeto (2 comunes, 2 raras,
+  1 épica): el mazo de 10+10 del §8 ya se puede construir (con alguna carta
+  repetida hasta el máximo de 2 copias), pero con poca variedad — ampliar el
+  roster sigue siendo trabajo de la Fase 6.
 - Arte definitivo de la carta: la plantilla actual es provisional.
 
 > Resuelto y movido al §3: el drag & drop **sí** elige posición de inserción,

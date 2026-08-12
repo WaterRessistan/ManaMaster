@@ -14,10 +14,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   displayName: Azul
   artwork: {fileID: -204505957576086280, guid: dfd110772a1bfc3418f06cf03d77a749, type: 3}
-  rarity: 2
+  rarity: 3
   manaCost: 2
-  maxHealth: 8
-  attack: 2
+  maxHealth: 10
+  attack: 3
   healPerTurn: 1
   canAttackMelee: 1
   canAttackRanged: 1

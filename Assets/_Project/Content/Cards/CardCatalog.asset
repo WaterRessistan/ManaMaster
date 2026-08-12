@@ -13,7 +13,6 @@ MonoBehaviour:
   m_Name: CardCatalog
   m_EditorClassIdentifier: 
   monsters:
-  - {fileID: 11400000, guid: 5ba0153c8a7541229bc4d4182090e71d, type: 2}
   - {fileID: 11400000, guid: fe970c8b0fb7409293c559b6382115f6, type: 2}
   - {fileID: 11400000, guid: aba82237058d4796bfe36aab746f9788, type: 2}
   - {fileID: 11400000, guid: 96471ff36036446baa3d1162bc66d39a, type: 2}
@@ -23,4 +22,9 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 2f83192caa0c4b2fa0ff1df26253e9bb, type: 2}
   - {fileID: 11400000, guid: 83f766c6ed3c4504a788321ec3928e7e, type: 2}
   - {fileID: 11400000, guid: 1838e8a2de6a403182ae97b23fd97267, type: 2}
-  items: []
+  items:
+  - {fileID: 11400000, guid: 43139122b39f4ce5b019a302c9d30538, type: 2}
+  - {fileID: 11400000, guid: 0131c8dc7b034624a70d8983b109ff94, type: 2}
+  - {fileID: 11400000, guid: e409936fc489435ebd0d0e81e94b66d8, type: 2}
+  - {fileID: 11400000, guid: 0b0f0cc0ae5145788ea4657157dd00c4, type: 2}
+  - {fileID: 11400000, guid: 2dc56d7a2d064714b156398081291fc7, type: 2}

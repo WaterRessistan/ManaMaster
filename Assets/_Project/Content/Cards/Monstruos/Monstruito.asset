@@ -15,7 +15,7 @@ MonoBehaviour:
   displayName: Monstruito
   artwork: {fileID: -2390279811801854476, guid: c65725974d2fe2041aa9b987a6665211, type: 3}
   rarity: 1
-  manaCost: 4
+  manaCost: 3
   maxHealth: 6
   attack: 2
   healPerTurn: 1

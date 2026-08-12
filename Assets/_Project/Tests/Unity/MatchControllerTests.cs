@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using ManaMaster.Core.Agents;
@@ -132,12 +133,7 @@ namespace ManaMaster.Unity.Tests
         public void ConMazoElegidoEnSesionElHumanoJuegaConEseMazo()
         {
             CardCatalog catalogo = AssetDatabase.LoadAssetAtPath<CardCatalog>(RutaCatalogo);
-            string[] seleccion = catalogo.Monsters
-                .Select(monstruo => monstruo.CardId)
-                .Take(ConstructorDeMazos.CartasPorMazo)
-                .ToArray();
-            Assert.That(seleccion.Length, Is.EqualTo(ConstructorDeMazos.CartasPorMazo),
-                "el catalogo del proyecto necesita al menos 10 monstruos para este test");
+            string[] seleccion = SeleccionDeDiezCartas(catalogo);
 
             _sesion = NuevaSesionDeTest();
             _sesion.FijarMazoHumano(seleccion);
@@ -177,6 +173,42 @@ namespace ManaMaster.Unity.Tests
             LogAssert.ignoreFailingMessages = false;
 
             Assert.That(controlador.HayPartida, Is.False);
+        }
+
+        /// <summary>
+        /// Selecciona 10 cartas del catalogo real respetando el maximo de 2
+        /// copias, sin importar si tiene 10 monstruos distintos o menos
+        /// (reparte copias extra por rondas, igual que la cuenta nueva de
+        /// <c>SesionDeJuego</c>).
+        /// </summary>
+        private static string[] SeleccionDeDiezCartas(CardCatalog catalogo)
+        {
+            List<string> distintos = catalogo.Monsters
+                .Where(monstruo => monstruo != null)
+                .Select(monstruo => monstruo.CardId)
+                .ToList();
+
+            List<string> seleccion = new();
+            for (int copia = 0;
+                 seleccion.Count < ConstructorDeMazos.CartasPorMazo
+                 && copia < ConstructorDeMazos.MaxCopiasPorCarta;
+                 copia++)
+            {
+                foreach (string cardId in distintos)
+                {
+                    if (seleccion.Count >= ConstructorDeMazos.CartasPorMazo)
+                    {
+                        break;
+                    }
+
+                    seleccion.Add(cardId);
+                }
+            }
+
+            Assert.That(seleccion.Count, Is.EqualTo(ConstructorDeMazos.CartasPorMazo),
+                "el catalogo del proyecto no da para un mazo de 10 con maximo 2 copias por carta");
+
+            return seleccion.ToArray();
         }
 
         private static string ManoDe(MatchController controlador)

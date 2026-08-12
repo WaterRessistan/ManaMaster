@@ -164,9 +164,69 @@ namespace ManaMaster.Unity.Tests
         }
 
         [Test]
-        public void ConCatalogoLaCuentaNuevaPoseeUnaCopiaDeCadaMonstruoYUnMazoListo()
+        public void ConDiezMonstruosDistintosLaCuentaNuevaDaUnaCopiaDeCadaUnoYUnMazoListo()
         {
-            CardCatalog catalogo = CatalogoDePrueba("Uno", "Dos", "Tres");
+            string[] nombres = NombresDePrueba(ConstructorDeMazos.CartasPorMazo);
+            CardCatalog catalogo = CatalogoDePrueba(nombres);
+
+            EjecutarConCuentaNueva(catalogo, conCatalogo =>
+            {
+                Assert.That(conCatalogo.Diamantes, Is.EqualTo(500));
+                foreach (string nombre in nombres)
+                {
+                    Assert.That(conCatalogo.CopiasEnColeccion(nombre), Is.EqualTo(1));
+                }
+
+                Assert.That(conCatalogo.TieneMazoElegido, Is.True);
+                Assert.That(conCatalogo.MazoHumano, Is.EquivalentTo(nombres));
+            });
+        }
+
+        /// <summary>
+        /// Con menos monstruos distintos que un mazo, la cuenta nueva reparte
+        /// copias extra por rondas (hasta el maximo de 2) hasta completar un
+        /// mazo jugable de <see cref="ConstructorDeMazos.CartasPorMazo"/>
+        /// cartas — el caso real del catalogo del proyecto, que hoy tiene
+        /// menos de 10 monstruos distintos.
+        /// </summary>
+        [Test]
+        public void ConMenosDeDiezMonstruosDistintosElMazoInicialSeCompletaConCopiasExtra()
+        {
+            string[] nombres = NombresDePrueba(6);
+            CardCatalog catalogo = CatalogoDePrueba(nombres);
+
+            EjecutarConCuentaNueva(catalogo, conCatalogo =>
+            {
+                Assert.That(conCatalogo.TieneMazoElegido, Is.True);
+                Assert.That(conCatalogo.MazoHumano.Count, Is.EqualTo(ConstructorDeMazos.CartasPorMazo));
+
+                int totalEnColeccion = 0;
+                foreach (string nombre in nombres)
+                {
+                    int copias = conCatalogo.CopiasEnColeccion(nombre);
+                    Assert.That(copias, Is.LessThanOrEqualTo(ConstructorDeMazos.MaxCopiasPorCarta),
+                        $"'{nombre}' supera el maximo de copias");
+                    totalEnColeccion += copias;
+                }
+
+                Assert.That(totalEnColeccion, Is.EqualTo(ConstructorDeMazos.CartasPorMazo));
+            });
+        }
+
+        private static string[] NombresDePrueba(int cuantos)
+        {
+            string[] nombres = new string[cuantos];
+            for (int i = 0; i < cuantos; i++)
+            {
+                nombres[i] = $"Monstruo{i}";
+            }
+
+            return nombres;
+        }
+
+        private static void EjecutarConCuentaNueva(
+            CardCatalog catalogo, System.Action<SesionDeJuego> asercion)
+        {
             SesionDeJuego conCatalogo = ScriptableObject.CreateInstance<SesionDeJuego>();
             conCatalogo.UsarRutaDeGuardadoParaTests(
                 Path.Combine(Path.GetTempPath(), $"manamaster-test-{System.Guid.NewGuid()}.json"));
@@ -177,13 +237,7 @@ namespace ManaMaster.Unity.Tests
 
             try
             {
-                Assert.That(conCatalogo.Diamantes, Is.EqualTo(500));
-                Assert.That(conCatalogo.CopiasEnColeccion("Uno"), Is.EqualTo(1));
-                Assert.That(conCatalogo.CopiasEnColeccion("Dos"), Is.EqualTo(1));
-                Assert.That(conCatalogo.CopiasEnColeccion("Tres"), Is.EqualTo(1));
-                Assert.That(conCatalogo.TieneMazoElegido, Is.True);
-                Assert.That(conCatalogo.MazoHumano,
-                    Is.EquivalentTo(new[] { "Uno", "Dos", "Tres" }));
+                asercion(conCatalogo);
             }
             finally
             {

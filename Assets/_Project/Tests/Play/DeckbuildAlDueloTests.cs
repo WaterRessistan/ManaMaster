@@ -47,26 +47,35 @@ namespace ManaMaster.PlayTests
             Assert.That(controlador.Sesion, Is.Not.Null, "Deckbuild no tiene sesion cableada");
 
             // Redirigir antes de tocar nada: la sesion de la cuenta nueva (en
-            // el fichero temporal) posee 1 copia de cada monstruo del
-            // catalogo real, que es justo lo que este test necesita elegir.
+            // el fichero temporal) posee la coleccion completa con copias
+            // suficientes para formar un mazo de 10 (SesionDeJuego reparte
+            // copias extra por rondas si el catalogo tiene menos de 10
+            // cartas distintas), sin importar el tamano exacto del catalogo.
             _rutaTemporal = Path.Combine(
                 Path.GetTempPath(), $"manamaster-test-{System.Guid.NewGuid()}.json");
             controlador.Sesion.UsarRutaDeGuardadoParaTests(_rutaTemporal);
 
             SelectorDeCarta[] selectores = Object.FindObjectsByType<SelectorDeCarta>(
                 FindObjectsSortMode.None);
-            Assert.That(selectores.Length, Is.EqualTo(ConstructorDeMazos.CartasPorMazo),
-                $"hacen falta exactamente {ConstructorDeMazos.CartasPorMazo} cartas " +
-                "distintas en el catalogo para este test (una copia de cada una)");
+            Assert.That(selectores.Length, Is.GreaterThan(0),
+                "Deckbuild no tiene ninguna carta seleccionable");
 
             List<string> elegidas = new();
             foreach (SelectorDeCarta selector in selectores)
             {
-                selector.AlPulsarAnadir();
-                elegidas.Add(selector.CardId);
+                int poseidas = controlador.Sesion.CopiasEnColeccion(selector.CardId);
+                for (int i = 0;
+                     i < poseidas && controlador.Total < ConstructorDeMazos.CartasPorMazo;
+                     i++)
+                {
+                    selector.AlPulsarAnadir();
+                    elegidas.Add(selector.CardId);
+                }
             }
 
-            Assert.That(controlador.PuedeGuardar, Is.True);
+            Assert.That(controlador.PuedeGuardar, Is.True,
+                $"solo se pudo elegir {controlador.Total}/{ConstructorDeMazos.CartasPorMazo} " +
+                "con la coleccion de la cuenta nueva");
 
             controlador.Guardar();
             yield return null;

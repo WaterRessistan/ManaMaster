@@ -52,8 +52,8 @@ namespace ManaMaster.Unity.Sesion
         private const string NombreDeFichero = "perfil.json";
         private const int DiamantesDeCuentaNueva = 500;
 
-        [Tooltip("Solo para inicializar la cuenta nueva: 1 copia de cada " +
-                 "monstruo y un mazo ya listo con esas mismas 10 cartas.")]
+        [Tooltip("Solo para inicializar la cuenta nueva: coleccion completa y " +
+                 "un mazo de monstruos ya listo para jugar.")]
         [SerializeField] private CardCatalog catalogo;
 
         private readonly List<string> _mazoHumano = new();
@@ -211,8 +211,8 @@ namespace ManaMaster.Unity.Sesion
         }
 
         /// <summary>
-        /// Cuenta nueva (DESIGN.md §10): 500 diamantes y, si hay catalogo, 1
-        /// copia de cada monstruo formando ya un mazo jugable.
+        /// Cuenta nueva (DESIGN.md §10): 500 diamantes y, si hay catalogo, la
+        /// coleccion completa con un mazo de monstruos ya listo.
         /// </summary>
         private void IniciarCuentaNueva()
         {
@@ -223,15 +223,47 @@ namespace ManaMaster.Unity.Sesion
                 return;
             }
 
+            List<string> monstruos = new();
             foreach (MonsterCardDefinition monstruo in catalogo.Monsters)
             {
-                if (monstruo == null)
+                if (monstruo != null)
                 {
-                    continue;
+                    monstruos.Add(monstruo.CardId);
                 }
+            }
 
-                _coleccion[monstruo.CardId] = 1;
-                _mazoHumano.Add(monstruo.CardId);
+            OtorgarColeccionYMazoInicial(monstruos, _mazoHumano);
+        }
+
+        /// <summary>
+        /// Da 1 copia de cada carta y, si con eso no llega a un mazo
+        /// completo, reparte copias extra en rondas (hasta el maximo de 2)
+        /// para dejar un mazo jugable de <see cref="ConstructorDeMazos.CartasPorMazo"/>
+        /// cartas, sin importar cuantas distintas haya en el catalogo.
+        /// </summary>
+        private void OtorgarColeccionYMazoInicial(List<string> cardIds, List<string> mazoDestino)
+        {
+            if (cardIds.Count == 0)
+            {
+                return;
+            }
+
+            for (int copia = 0;
+                 mazoDestino.Count < ConstructorDeMazos.CartasPorMazo
+                 && copia < ConstructorDeMazos.MaxCopiasPorCarta;
+                 copia++)
+            {
+                foreach (string cardId in cardIds)
+                {
+                    if (mazoDestino.Count >= ConstructorDeMazos.CartasPorMazo)
+                    {
+                        break;
+                    }
+
+                    mazoDestino.Add(cardId);
+                    _coleccion[cardId] =
+                        (_coleccion.TryGetValue(cardId, out int actuales) ? actuales : 0) + 1;
+                }
             }
         }
 
