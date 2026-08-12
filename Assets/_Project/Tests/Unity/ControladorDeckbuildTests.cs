@@ -35,6 +35,14 @@ namespace ManaMaster.Unity.Tests
                     }
                 }
 
+                foreach (ItemCardDefinition objeto in _catalogo.Items)
+                {
+                    if (objeto != null)
+                    {
+                        Object.DestroyImmediate(objeto);
+                    }
+                }
+
                 Object.DestroyImmediate(_catalogo);
             }
 
@@ -145,21 +153,26 @@ namespace ManaMaster.Unity.Tests
         }
 
         [Test]
-        public void PuedeGuardarSoloConLasDiezCartas()
+        public void PuedeGuardarExigeMonstruosYObjetosCompletos()
         {
             ControladorDeckbuild controlador = Controlador(10);
-            for (int i = 0; i < 4; i++)
+            for (int i = 0; i < 5; i++)
             {
                 controlador.Anadir($"Monstruo{i}");
                 controlador.Anadir($"Monstruo{i}");
             }
 
-            Assert.That(controlador.PuedeGuardar, Is.False);
-
-            controlador.Anadir("Monstruo4");
-            controlador.Anadir("Monstruo5");
-
             Assert.That(controlador.Total, Is.EqualTo(10));
+            Assert.That(controlador.PuedeGuardar, Is.False,
+                "los 10 monstruos no bastan sin los 10 objetos");
+
+            for (int i = 0; i < 5; i++)
+            {
+                controlador.AnadirObjeto($"Objeto{i}");
+                controlador.AnadirObjeto($"Objeto{i}");
+            }
+
+            Assert.That(controlador.TotalObjetos, Is.EqualTo(10));
             Assert.That(controlador.PuedeGuardar, Is.True);
         }
 
@@ -172,6 +185,52 @@ namespace ManaMaster.Unity.Tests
             controlador.Guardar();
 
             Assert.That(_sesion.TieneMazoElegido, Is.False);
+        }
+
+        // Nota: no hay un test EditMode que llame a Guardar() con las dos
+        // mitades completas — eso dispara SceneManager.LoadScene de verdad,
+        // que solo es valido en PlayMode. Ese camino completo (incluida la
+        // sesion con ambos mazos fijados) lo cubre DeckbuildAlDueloTests.
+
+        [Test]
+        public void AnadirUnObjetoValidoAumentaElTotalObjetosYAvisa()
+        {
+            ControladorDeckbuild controlador = Controlador(10);
+            int avisos = 0;
+            controlador.SeleccionCambiada += () => avisos++;
+
+            bool anadido = controlador.AnadirObjeto("Objeto0");
+
+            Assert.That(anadido, Is.True);
+            Assert.That(controlador.TotalObjetos, Is.EqualTo(1));
+            Assert.That(controlador.CopiasObjeto("Objeto0"), Is.EqualTo(1));
+            Assert.That(avisos, Is.EqualTo(1));
+        }
+
+        [Test]
+        public void QuitarUnObjetoElegidoLoQuitaYAvisa()
+        {
+            ControladorDeckbuild controlador = Controlador(10);
+            controlador.AnadirObjeto("Objeto0");
+            int avisos = 0;
+            controlador.SeleccionCambiada += () => avisos++;
+
+            bool quitado = controlador.QuitarObjeto("Objeto0");
+
+            Assert.That(quitado, Is.True);
+            Assert.That(controlador.CopiasObjeto("Objeto0"), Is.EqualTo(0));
+            Assert.That(avisos, Is.EqualTo(1));
+        }
+
+        [Test]
+        public void NoSePuedeAnadirUnObjetoQueNoSePosee()
+        {
+            ControladorDeckbuild controlador = Controlador(10, copiasPoseidasPorCarta: 0);
+
+            bool anadido = controlador.AnadirObjeto("Objeto0");
+
+            Assert.That(anadido, Is.False);
+            Assert.That(controlador.TotalObjetos, Is.EqualTo(0));
         }
 
         [Test]
@@ -209,6 +268,7 @@ namespace ManaMaster.Unity.Tests
             for (int i = 0; i < monstruosEnCatalogo; i++)
             {
                 _sesion.AnadirAColeccion($"Monstruo{i}", copiasPoseidasPorCarta);
+                _sesion.AnadirAColeccion($"Objeto{i}", copiasPoseidasPorCarta);
             }
 
             _objeto = new GameObject("ControladorDeckbuild");
@@ -224,8 +284,8 @@ namespace ManaMaster.Unity.Tests
         }
 
         /// <summary>
-        /// Catalogo de mentira con N monstruos distintos, nombrados
-        /// "Monstruo0".."MonstruoN-1" (el CardId es el nombre del asset).
+        /// Catalogo de mentira con N monstruos ("Monstruo0"..) y N objetos
+        /// ("Objeto0"..) distintos (el CardId es el nombre del asset).
         /// </summary>
         private static CardCatalog CatalogoDePrueba(int monstruos)
         {
@@ -233,8 +293,8 @@ namespace ManaMaster.Unity.Tests
             catalogo.name = "CatalogoDePrueba";
 
             SerializedObject serializado = new(catalogo);
-            SerializedProperty lista = serializado.FindProperty("monsters");
-            lista.arraySize = monstruos;
+            SerializedProperty listaMonstruos = serializado.FindProperty("monsters");
+            listaMonstruos.arraySize = monstruos;
 
             for (int i = 0; i < monstruos; i++)
             {
@@ -242,7 +302,19 @@ namespace ManaMaster.Unity.Tests
                     ScriptableObject.CreateInstance<MonsterCardDefinition>();
                 definicion.name = $"Monstruo{i}";
 
-                lista.GetArrayElementAtIndex(i).objectReferenceValue = definicion;
+                listaMonstruos.GetArrayElementAtIndex(i).objectReferenceValue = definicion;
+            }
+
+            SerializedProperty listaObjetos = serializado.FindProperty("items");
+            listaObjetos.arraySize = monstruos;
+
+            for (int i = 0; i < monstruos; i++)
+            {
+                ItemCardDefinition definicion =
+                    ScriptableObject.CreateInstance<ItemCardDefinition>();
+                definicion.name = $"Objeto{i}";
+
+                listaObjetos.GetArrayElementAtIndex(i).objectReferenceValue = definicion;
             }
 
             serializado.ApplyModifiedPropertiesWithoutUndo();

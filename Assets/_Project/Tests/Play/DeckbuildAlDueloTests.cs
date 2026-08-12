@@ -13,8 +13,8 @@ using UnityEngine.TestTools;
 namespace ManaMaster.PlayTests
 {
     /// <summary>
-    /// El mazo elegido en Deckbuild es de verdad el que juega el humano en
-    /// Duelo, de punta a punta por el camino real de las escenas.
+    /// El mazo 10+10 elegido en Deckbuild es de verdad el que juega el
+    /// humano en Duelo, de punta a punta por el camino real de las escenas.
     /// </summary>
     /// <remarks>
     /// Redirige el guardado de la sesion real a un fichero temporal antes de
@@ -47,35 +47,33 @@ namespace ManaMaster.PlayTests
             Assert.That(controlador.Sesion, Is.Not.Null, "Deckbuild no tiene sesion cableada");
 
             // Redirigir antes de tocar nada: la sesion de la cuenta nueva (en
-            // el fichero temporal) posee la coleccion completa con copias
-            // suficientes para formar un mazo de 10 (SesionDeJuego reparte
-            // copias extra por rondas si el catalogo tiene menos de 10
-            // cartas distintas), sin importar el tamano exacto del catalogo.
+            // el fichero temporal) posee coleccion y copias suficientes para
+            // formar los dos mazos completos (SesionDeJuego reparte copias
+            // extra por rondas si el catalogo tiene menos cartas distintas
+            // que un mazo), sin importar el tamano exacto del catalogo.
             _rutaTemporal = Path.Combine(
                 Path.GetTempPath(), $"manamaster-test-{System.Guid.NewGuid()}.json");
             controlador.Sesion.UsarRutaDeGuardadoParaTests(_rutaTemporal);
 
-            SelectorDeCarta[] selectores = Object.FindObjectsByType<SelectorDeCarta>(
-                FindObjectsSortMode.None);
-            Assert.That(selectores.Length, Is.GreaterThan(0),
-                "Deckbuild no tiene ninguna carta seleccionable");
+            List<string> elegidas = ElegirHastaCompletar(
+                Object.FindObjectsByType<SelectorDeCarta>(FindObjectsSortMode.None),
+                selector => selector.CardId,
+                selector => selector.AlPulsarAnadir(),
+                selector => controlador.Sesion.CopiasEnColeccion(selector.CardId),
+                () => controlador.Total,
+                ConstructorDeMazos.CartasPorMazo);
 
-            List<string> elegidas = new();
-            foreach (SelectorDeCarta selector in selectores)
-            {
-                int poseidas = controlador.Sesion.CopiasEnColeccion(selector.CardId);
-                for (int i = 0;
-                     i < poseidas && controlador.Total < ConstructorDeMazos.CartasPorMazo;
-                     i++)
-                {
-                    selector.AlPulsarAnadir();
-                    elegidas.Add(selector.CardId);
-                }
-            }
+            List<string> elegidasObjetos = ElegirHastaCompletar(
+                Object.FindObjectsByType<SelectorDeObjeto>(FindObjectsSortMode.None),
+                selector => selector.CardId,
+                selector => selector.AlPulsarAnadir(),
+                selector => controlador.Sesion.CopiasEnColeccion(selector.CardId),
+                () => controlador.TotalObjetos,
+                ConstructorDeMazos.CartasPorMazoDeObjetos);
 
             Assert.That(controlador.PuedeGuardar, Is.True,
-                $"solo se pudo elegir {controlador.Total}/{ConstructorDeMazos.CartasPorMazo} " +
-                "con la coleccion de la cuenta nueva");
+                $"monstruos {controlador.Total}/{ConstructorDeMazos.CartasPorMazo}, " +
+                $"objetos {controlador.TotalObjetos}/{ConstructorDeMazos.CartasPorMazoDeObjetos}");
 
             controlador.Guardar();
             yield return null;
@@ -91,6 +89,37 @@ namespace ManaMaster.PlayTests
             Assert.That(partida.HayPartida, Is.True);
             Assert.That(partida.Humano.MonstruosRestantes, Is.EqualTo(10));
             Assert.That(TodasLasCartasDelHumano(partida), Is.EquivalentTo(elegidas));
+            Assert.That(TodosLosObjetosDelHumano(partida), Is.EquivalentTo(elegidasObjetos));
+        }
+
+        /// <summary>
+        /// Pulsa "anadir" en cada selector, tantas veces como copias se
+        /// posean, hasta completar el mazo. Generico para no repetir el
+        /// mismo bucle con <c>SelectorDeCarta</c> y <c>SelectorDeObjeto</c>.
+        /// </summary>
+        private static List<string> ElegirHastaCompletar<T>(
+            T[] selectores,
+            System.Func<T, string> cardId,
+            System.Action<T> anadir,
+            System.Func<T, int> copiasPoseidas,
+            System.Func<int> totalElegido,
+            int cartasPorMazo)
+        {
+            Assert.That(selectores.Length, Is.GreaterThan(0),
+                $"Deckbuild no tiene ningun {typeof(T).Name}");
+
+            List<string> elegidas = new();
+            foreach (T selector in selectores)
+            {
+                int poseidas = copiasPoseidas(selector);
+                for (int i = 0; i < poseidas && totalElegido() < cartasPorMazo; i++)
+                {
+                    anadir(selector);
+                    elegidas.Add(cardId(selector));
+                }
+            }
+
+            return elegidas;
         }
 
         private static List<string> TodasLasCartasDelHumano(MatchController controlador)
@@ -111,6 +140,26 @@ namespace ManaMaster.PlayTests
             }
 
             return cartas;
+        }
+
+        private static List<string> TodosLosObjetosDelHumano(MatchController controlador)
+        {
+            List<string> objetos = new();
+            foreach (var objeto in controlador.Humano.MazoDeObjetos.Objetos)
+            {
+                objetos.Add(objeto.CardId);
+            }
+
+            for (int slot = 0; slot < ItemHand.Capacity; slot++)
+            {
+                var enMano = controlador.Humano.ManoDeObjetos[slot];
+                if (enMano != null)
+                {
+                    objetos.Add(enMano.CardId);
+                }
+            }
+
+            return objetos;
         }
 
         private static IEnumerator CargarEscena(string nombre)

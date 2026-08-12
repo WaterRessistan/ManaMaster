@@ -53,7 +53,9 @@ namespace ManaMaster.Unity.Deckbuild
 
             if (contador != null)
             {
-                contador.text = $"{controlador.Total}/{ConstructorDeMazos.CartasPorMazo}";
+                contador.text =
+                    $"Monstruos {controlador.Total}/{ConstructorDeMazos.CartasPorMazo} · " +
+                    $"Objetos {controlador.TotalObjetos}/{ConstructorDeMazos.CartasPorMazoDeObjetos}";
             }
 
             if (guardar != null)

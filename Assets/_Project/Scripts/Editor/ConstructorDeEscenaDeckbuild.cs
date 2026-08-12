@@ -16,10 +16,9 @@ namespace ManaMaster.Herramientas
     /// (DESIGN.md §8).
     /// </summary>
     /// <remarks>
-    /// Funcional de verdad con las 10 cartas de monstruo que hay hoy en el
-    /// catalogo. El lado de objetos del mazo 10+10 queda deshabilitado: no hay
-    /// ninguna carta de objeto todavia (DESIGN.md §13), asi que ese hueco se
-    /// activa cuando exista contenido de la Fase 6/7.
+    /// Funcional de verdad con las cartas de monstruo y de objeto que hay hoy
+    /// en el catalogo: el mazo 10+10 de DESIGN.md §8 se guarda solo con las
+    /// dos mitades completas (<see cref="ControladorDeckbuild.PuedeGuardar"/>).
     /// </remarks>
     public static class ConstructorDeEscenaDeckbuild
     {
@@ -28,10 +27,13 @@ namespace ManaMaster.Herramientas
         private static readonly Color ColorDeFondo = new(0.07f, 0.08f, 0.12f, 1f);
         private static readonly Vector2 TamanoCarta = new(130f, 180f);
         private static readonly Vector2 TamanoSelector = new(150f, 250f);
+        private static readonly Vector2 TamanoCartaObjeto = new(100f, 140f);
+        private static readonly Vector2 TamanoSelectorDeObjeto = new(120f, 210f);
 
         private const int Columnas = 5;
         private const float SeparacionX = 170f;
         private const float SeparacionY = 280f;
+        private const float SeparacionXObjetos = 190f;
 
         [MenuItem("Mana Master/Reconstruir escena de deckbuild")]
         public static void Reconstruir()
@@ -72,7 +74,24 @@ namespace ManaMaster.Herramientas
                 }
             }
 
-            PanelDeObjetos(lienzo.transform);
+            ConstructorDeInterfaz.Texto("TituloObjetos", lienzo.transform,
+                new Vector2(0f, -260f), new Vector2(700f, 40f), "Objetos", 26);
+
+            if (catalogo != null)
+            {
+                for (int i = 0; i < catalogo.Items.Count; i++)
+                {
+                    ItemCardDefinition definicion = catalogo.Items[i];
+                    if (definicion == null)
+                    {
+                        continue;
+                    }
+
+                    float x = (i - (catalogo.Items.Count - 1) * 0.5f) * SeparacionXObjetos;
+
+                    SelectorObjeto(lienzo.transform, new Vector2(x, -370f), controlador, definicion);
+                }
+            }
 
             Pie(lienzo.transform, controlador);
 
@@ -129,21 +148,65 @@ namespace ManaMaster.Herramientas
                 ("quitar", quitar));
         }
 
-        /// <summary>
-        /// Hueco de objetos del mazo 10+10, deshabilitado hasta que exista
-        /// contenido de objetos en el catalogo (DESIGN.md §13).
-        /// </summary>
-        private static void PanelDeObjetos(Transform padre)
+        private static void SelectorObjeto(
+            Transform padre, Vector2 posicion,
+            ControladorDeckbuild controlador, ItemCardDefinition definicion)
         {
-            Image panel = ConstructorDeInterfaz.Panel("PanelObjetos", padre,
-                new Vector2(0f, -420f), new Vector2(900f, 120f),
-                new Color(1f, 1f, 1f, 0.04f), recibeClics: false);
+            RectTransform raiz = ConstructorDeInterfaz.Nodo(
+                $"SelectorObjeto_{definicion.name}", padre, posicion, TamanoSelectorDeObjeto);
 
-            ConstructorDeInterfaz.Texto("Aviso", panel.transform,
-                Vector2.zero, new Vector2(860f, 100f),
-                "Objetos: disponibles cuando existan cartas de objeto en el " +
-                "catalogo (Fase 6/7). El mazo 10+10 de DESIGN.md §8 usa por " +
-                "ahora solo las 10 de monstruo.", 18);
+            SelectorDeObjeto selector = raiz.gameObject.AddComponent<SelectorDeObjeto>();
+
+            VistaCartaObjeto carta = CartaObjeto(raiz.transform, new Vector2(0f, 25f));
+
+            Text copias = ConstructorDeInterfaz.Texto("Copias", raiz,
+                new Vector2(0f, -70f), new Vector2(110f, 26f), "0/2", 16);
+
+            Button quitar = ConstructorDeInterfaz.Boton("BotonQuitar", raiz,
+                new Vector2(-40f, -95f), new Vector2(50f, 40f), "-", out _);
+            Button anadir = ConstructorDeInterfaz.Boton("BotonAnadir", raiz,
+                new Vector2(40f, -95f), new Vector2(50f, 40f), "+", out _);
+
+            ConstructorDeInterfaz.Cablear(selector,
+                ("definicion", definicion),
+                ("controlador", controlador),
+                ("vista", carta),
+                ("copias", copias),
+                ("anadir", anadir),
+                ("quitar", quitar));
+        }
+
+        /// <summary>Objeto dibujado: fondo, arte y los tres bonus.</summary>
+        private static VistaCartaObjeto CartaObjeto(Transform padre, Vector2 posicion)
+        {
+            RectTransform raiz = ConstructorDeInterfaz.Panel("Carta", padre, posicion,
+                    TamanoCartaObjeto, new Color(0.15f, 0.17f, 0.24f, 1f), recibeClics: false)
+                .rectTransform;
+
+            VistaCartaObjeto vista = raiz.gameObject.AddComponent<VistaCartaObjeto>();
+
+            Image arte = ConstructorDeInterfaz.Panel("Arte", raiz,
+                new Vector2(0f, 24f), new Vector2(80f, 56f), Color.white,
+                recibeClics: false);
+            arte.preserveAspect = true;
+
+            Text nombreObjeto = ConstructorDeInterfaz.Texto("Nombre", raiz,
+                new Vector2(0f, 58f), new Vector2(96f, 22f), "", 12);
+            Text bonusAtaque = ConstructorDeInterfaz.Texto("BonusAtaque", raiz,
+                new Vector2(-28f, -50f), new Vector2(28f, 20f), "", 14);
+            Text bonusVida = ConstructorDeInterfaz.Texto("BonusVida", raiz,
+                new Vector2(0f, -50f), new Vector2(28f, 20f), "", 14);
+            Text bonusCura = ConstructorDeInterfaz.Texto("BonusCura", raiz,
+                new Vector2(28f, -50f), new Vector2(28f, 20f), "", 14);
+
+            ConstructorDeInterfaz.Cablear(vista,
+                ("nombre", nombreObjeto),
+                ("bonusAtaque", bonusAtaque),
+                ("bonusVida", bonusVida),
+                ("bonusCura", bonusCura),
+                ("arte", arte));
+
+            return vista;
         }
 
         private static void Pie(Transform padre, ControladorDeckbuild controlador)
