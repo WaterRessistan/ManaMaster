@@ -37,6 +37,9 @@ namespace ManaMaster.Unity.Tienda
         /// <summary>CardId de la carta que se compra, o null si esta oferta es el sobre.</summary>
         public string CardId => carta != null ? carta.CardId : null;
 
+        /// <summary>Si esta oferta es una carta de objeto (no monstruo, no sobre).</summary>
+        public bool EsCartaDeObjeto => carta is ItemCardDefinition;
+
         /// <summary>
         /// Precio en diamantes (DESIGN.md §10). Se calcula a partir de
         /// <see cref="carta"/>/<see cref="catalogo"/> en vez de guardarse en

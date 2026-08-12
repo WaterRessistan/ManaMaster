@@ -55,6 +55,23 @@ namespace ManaMaster.PlayTests
         }
 
         [UnityTest]
+        public IEnumerator ComprarUnObjetoGastaSuPrecioYAmpliaLaColeccion()
+        {
+            yield return CargarEscena("Tienda");
+
+            VistaOfertaTienda oferta = OfertaDeObjeto();
+            Redirigir(oferta.Sesion);
+
+            int diamantesAntes = oferta.Sesion.Diamantes;
+            int copiasAntes = oferta.Sesion.CopiasEnColeccion(oferta.CardId);
+
+            oferta.Comprar();
+
+            Assert.That(oferta.Sesion.Diamantes, Is.EqualTo(diamantesAntes - oferta.Precio));
+            Assert.That(oferta.Sesion.CopiasEnColeccion(oferta.CardId), Is.EqualTo(copiasAntes + 1));
+        }
+
+        [UnityTest]
         public IEnumerator AbrirUnSobreGastaSuPrecio()
         {
             yield return CargarEscena("Tienda");
@@ -140,6 +157,21 @@ namespace ManaMaster.PlayTests
             }
 
             Assert.Fail("la Tienda no tiene ninguna oferta de carta suelta");
+            return null;
+        }
+
+        private static VistaOfertaTienda OfertaDeObjeto()
+        {
+            foreach (VistaOfertaTienda oferta in Object.FindObjectsByType<VistaOfertaTienda>(
+                         FindObjectsSortMode.None))
+            {
+                if (oferta.EsCartaDeObjeto)
+                {
+                    return oferta;
+                }
+            }
+
+            Assert.Fail("la Tienda no tiene ninguna oferta de objeto");
             return null;
         }
 

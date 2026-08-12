@@ -44,6 +44,9 @@ namespace ManaMaster.Unity.Duelo
 
         public bool TieneCarta => Carta != null;
 
+        /// <summary>Si el badge de objeto equipado esta encendido ahora mismo.</summary>
+        public bool MuestraIconoDeObjeto => iconoObjeto != null && iconoObjeto.enabled;
+
         /// <summary>Muestra la carta con su vida real y enciende el objeto.</summary>
         public void Mostrar(CardInstance carta) => Mostrar(carta, null);
 
