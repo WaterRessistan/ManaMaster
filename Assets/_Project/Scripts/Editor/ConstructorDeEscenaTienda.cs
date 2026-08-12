@@ -50,8 +50,7 @@ namespace ManaMaster.Herramientas
             Diamantes(lienzo.transform, sesion);
 
             Oferta(lienzo.transform, new Vector2(0f, 300f),
-                "Sobre (3 cartas, ≥1 Rara)", PreciosTienda.Sobre,
-                sesion, carta: null, catalogo);
+                "Sobre (3 cartas, ≥1 Rara)", sesion, carta: null, catalogo);
 
             ConstructorDeInterfaz.Texto("TituloCartasSueltas", lienzo.transform,
                 new Vector2(0f, 140f), new Vector2(700f, 50f), "Cartas sueltas", 28);
@@ -73,9 +72,7 @@ namespace ManaMaster.Herramientas
                     float y = 20f - fila * SeparacionY;
 
                     Oferta(lienzo.transform, new Vector2(x, y),
-                        definicion.DisplayName,
-                        PreciosTienda.DeCartaSuelta(definicion.Rarity),
-                        sesion, definicion, catalogo: null);
+                        definicion.DisplayName, sesion, definicion, catalogo: null);
                 }
             }
 
@@ -93,7 +90,7 @@ namespace ManaMaster.Herramientas
         }
 
         private static VistaOfertaTienda Oferta(
-            Transform padre, Vector2 posicion, string etiqueta, int precio,
+            Transform padre, Vector2 posicion, string etiqueta,
             SesionDeJuego sesion, MonsterCardDefinition carta, CardCatalog catalogo)
         {
             Image fondo = ConstructorDeInterfaz.Panel("Oferta", padre, posicion,
@@ -122,7 +119,7 @@ namespace ManaMaster.Herramientas
             UnityEditor.Events.UnityEventTools.AddPersistentListener(
                 comprar.onClick, vista.Comprar);
 
-            vista.Mostrar(etiqueta, precio);
+            vista.Mostrar(etiqueta);
 
             return vista;
         }

@@ -156,10 +156,28 @@ namespace ManaMaster.Unity.Sesion
         }
 
         /// <summary>
-        /// Redirige el guardado a otra ruta. Solo para tests: la partida real
-        /// siempre usa <see cref="Application.persistentDataPath"/>.
+        /// Redirige el guardado a otra ruta y olvida lo que hubiera en
+        /// memoria, para que el siguiente acceso recargue desde ahi (o
+        /// arranque una cuenta nueva si la ruta no existe). Solo para tests:
+        /// la partida real siempre usa
+        /// <see cref="Application.persistentDataPath"/>.
         /// </summary>
-        public void UsarRutaDeGuardadoParaTests(string ruta) => _rutaDeGuardadoParaTests = ruta;
+        /// <remarks>
+        /// Olvidar el estado en memoria es imprescindible: este asset
+        /// sobrevive a los cambios de escena a proposito
+        /// (<see cref="HideFlags.DontUnloadUnusedAsset"/>), asi que en un
+        /// mismo Play de PlayMode varios tests seguidos comparten la misma
+        /// instancia. Sin este reinicio, el saldo de un test contaminaria al
+        /// siguiente aunque cada uno redirigiera a su propio fichero.
+        /// </remarks>
+        public void UsarRutaDeGuardadoParaTests(string ruta)
+        {
+            _rutaDeGuardadoParaTests = ruta;
+            _cargado = false;
+            _diamantes = 0;
+            _mazoHumano.Clear();
+            _coleccion.Clear();
+        }
 
         private void GuardarYAvisar()
         {

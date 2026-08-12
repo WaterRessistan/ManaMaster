@@ -30,7 +30,22 @@ namespace ManaMaster.Unity.Tienda
         [Tooltip("Solo hace falta si 'carta' esta vacio, para elegir las del sobre.")]
         [SerializeField] private CardCatalog catalogo;
 
-        private int _precio;
+        /// <summary>Sesion cableada, o null si no se cableo ninguna.</summary>
+        public SesionDeJuego Sesion => sesion;
+
+        /// <summary>CardId de la carta que se compra, o null si esta oferta es el sobre.</summary>
+        public string CardId => carta != null ? carta.CardId : null;
+
+        /// <summary>
+        /// Precio en diamantes (DESIGN.md §10). Se calcula a partir de
+        /// <see cref="carta"/>/<see cref="catalogo"/> en vez de guardarse en
+        /// un campo aparte: ese campo no seria <c>[SerializeField]</c> (para
+        /// no ensuciar la escena con un numero derivable) y por tanto se
+        /// perderia al recargar la escena guardada, cobrando 0 por error.
+        /// </summary>
+        public int Precio => carta != null
+            ? PreciosTienda.DeCartaSuelta(carta.Rarity)
+            : PreciosTienda.Sobre;
 
         private void OnEnable()
         {
@@ -48,10 +63,8 @@ namespace ManaMaster.Unity.Tienda
             }
         }
 
-        public void Mostrar(string etiqueta, int precioEnDiamantes)
+        public void Mostrar(string etiqueta)
         {
-            _precio = precioEnDiamantes;
-
             if (nombre != null)
             {
                 nombre.text = etiqueta;
@@ -59,14 +72,14 @@ namespace ManaMaster.Unity.Tienda
 
             if (precio != null)
             {
-                precio.text = $"{precioEnDiamantes} \U0001F48E";
+                precio.text = $"{Precio} \U0001F48E";
             }
         }
 
         /// <summary>Conectado al boton.</summary>
         public void Comprar()
         {
-            if (sesion == null || !sesion.TryGastarDiamantes(_precio))
+            if (sesion == null || !sesion.TryGastarDiamantes(Precio))
             {
                 Debug.Log($"[VistaOfertaTienda] No hay diamantes suficientes para " +
                           $"'{(nombre != null ? nombre.text : "?")}'.");
