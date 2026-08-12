@@ -45,18 +45,28 @@ namespace ManaMaster.Unity.Duelo
                 return;
             }
 
-            if (!eventData.pointerDrag.TryGetComponent(out CartaDeMano carta))
+            if (eventData.pointerDrag.TryGetComponent(out CartaDeMano carta))
             {
+                ResultadoDespliegue resultado = controlador.Desplegar(carta.Hueco, carril);
+
+                if (resultado != ResultadoDespliegue.Ok)
+                {
+                    Debug.Log($"[CarrilDeInsercion] No se pudo desplegar en " +
+                              $"{BoardLanes.ToDisplayName(carril)}: {Explicar(resultado)}");
+                }
+
                 return;
             }
 
-            ResultadoDespliegue resultado =
-                controlador.Desplegar(carta.Hueco, carril);
-
-            if (resultado != ResultadoDespliegue.Ok)
+            if (eventData.pointerDrag.TryGetComponent(out CartaDeObjeto objeto))
             {
-                Debug.Log($"[CarrilDeInsercion] No se pudo desplegar en " +
-                          $"{BoardLanes.ToDisplayName(carril)}: {Explicar(resultado)}");
+                ResultadoEquipar resultado = controlador.EquiparObjeto(objeto.Hueco, carril);
+
+                if (resultado != ResultadoEquipar.Ok)
+                {
+                    Debug.Log($"[CarrilDeInsercion] No se pudo equipar en " +
+                              $"{BoardLanes.ToDisplayName(carril)}: {Explicar(resultado)}");
+                }
             }
         }
 
@@ -75,6 +85,14 @@ namespace ManaMaster.Unity.Duelo
             ResultadoDespliegue.ArenaLlena => "ya hay tres monstruos",
             ResultadoDespliegue.CarrilInvalido => "ese carril dejaria un hueco",
             ResultadoDespliegue.HuecoVacio => "no hay carta en ese hueco",
+            _ => resultado.ToString()
+        };
+
+        private static string Explicar(ResultadoEquipar resultado) => resultado switch
+        {
+            ResultadoEquipar.HuecoVacio => "no hay objeto en ese hueco",
+            ResultadoEquipar.CarrilVacio => "no hay ningun monstruo ahi",
+            ResultadoEquipar.YaLlevaObjeto => "ese monstruo ya lleva un objeto",
             _ => resultado.ToString()
         };
     }

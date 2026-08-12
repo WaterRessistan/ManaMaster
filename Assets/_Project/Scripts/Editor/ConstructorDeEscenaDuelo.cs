@@ -35,6 +35,7 @@ namespace ManaMaster.Herramientas
 
         private static readonly Vector2 TamanoCarta = new(130f, 180f);
         private static readonly Vector2 TamanoCarril = new(150f, 200f);
+        private static readonly Vector2 TamanoCartaObjeto = new(100f, 140f);
 
         // Alturas de cada fila del tablero, de arriba abajo.
         private const float AlturaTraserosRival = 385f;
@@ -64,6 +65,7 @@ namespace ManaMaster.Herramientas
                 lienzo.transform, controlador, esDelRival: false);
 
             Mano(lienzo.transform, controlador, arenaJugador);
+            ManoDeObjetos(lienzo.transform, controlador);
             VistaMarcador marcador = Marcador(lienzo.transform, controlador);
             Resultado(lienzo.transform, controlador);
 
@@ -224,6 +226,49 @@ namespace ManaMaster.Herramientas
             ConstructorDeInterfaz.CablearLista(vista, "huecos", huecos.ToArray());
         }
 
+        /// <summary>
+        /// Mano de objetos del jugador, junto a la de monstruos. Solo la
+        /// suya: el Rival no recibe mazo de objetos (ver
+        /// <c>MatchController.Comenzar</c>), asi que no hace falta ocultarla
+        /// como se hace con la mano de monstruos del rival.
+        /// </summary>
+        private static void ManoDeObjetos(Transform padre, MatchController controlador)
+        {
+            RectTransform raiz = ConstructorDeInterfaz.Nodo(
+                "ManoDeObjetos", padre, new Vector2(560f, AlturaMano), new Vector2(260f, 200f));
+
+            ConstructorDeInterfaz.Texto("TituloObjetos", raiz,
+                new Vector2(0f, 90f), new Vector2(240f, 30f), "Objetos", 16);
+
+            VistaManoDeObjetos vista = raiz.gameObject.AddComponent<VistaManoDeObjetos>();
+
+            List<Object> huecos = new();
+            for (int hueco = 0; hueco < ItemHand.Capacity; hueco++)
+            {
+                float desplazamiento = (hueco - (ItemHand.Capacity - 1) * 0.5f) * 120f;
+
+                Image fondo = ConstructorDeInterfaz.Panel(
+                    $"Hueco{hueco + 1}", raiz,
+                    new Vector2(desplazamiento, 0f), TamanoCartaObjeto,
+                    new Color(0.15f, 0.17f, 0.24f, 1f));
+
+                fondo.gameObject.AddComponent<CanvasGroup>();
+                CartaDeObjeto carta = fondo.gameObject.AddComponent<CartaDeObjeto>();
+
+                VistaCartaObjeto vistaObjeto = CartaObjetoDibujada(fondo.transform);
+
+                ConstructorDeInterfaz.Cablear(carta,
+                    ("controlador", controlador),
+                    ("vista", vistaObjeto));
+                ConstructorDeInterfaz.CablearInt(carta, "hueco", hueco);
+
+                huecos.Add(carta);
+            }
+
+            ConstructorDeInterfaz.Cablear(vista, ("controlador", controlador));
+            ConstructorDeInterfaz.CablearLista(vista, "huecos", huecos.ToArray());
+        }
+
         private static VistaMarcador Marcador(
             Transform padre, MatchController controlador)
         {
@@ -351,12 +396,53 @@ namespace ManaMaster.Herramientas
             Text vida = ConstructorDeInterfaz.Texto("Vida", raiz,
                 new Vector2(44f, -64f), new Vector2(36f, 28f), "", 22);
 
+            // Badge del objeto equipado, asomando por la esquina. Apagado
+            // hasta que VistaCartaMonstruo.Refrescar lo encienda.
+            Image iconoObjeto = ConstructorDeInterfaz.Panel("IconoObjeto", raiz,
+                new Vector2(50f, 78f), new Vector2(28f, 28f), Color.white,
+                recibeClics: false);
+            iconoObjeto.preserveAspect = true;
+            iconoObjeto.enabled = false;
+
             ConstructorDeInterfaz.Cablear(vista,
                 ("nombre", nombreCarta),
                 ("ataque", ataque),
                 ("mana", mana),
                 ("cura", cura),
                 ("vida", vida),
+                ("arte", arte),
+                ("iconoObjeto", iconoObjeto));
+
+            return vista;
+        }
+
+        /// <summary>Contenido de una carta de objeto: arte y los tres bonus.</summary>
+        private static VistaCartaObjeto CartaObjetoDibujada(Transform padre)
+        {
+            RectTransform raiz = ConstructorDeInterfaz.Nodo(
+                "Contenido", padre, Vector2.zero, TamanoCartaObjeto);
+
+            VistaCartaObjeto vista = raiz.gameObject.AddComponent<VistaCartaObjeto>();
+
+            Image arte = ConstructorDeInterfaz.Panel("Arte", raiz,
+                new Vector2(0f, 24f), new Vector2(80f, 56f), Color.white,
+                recibeClics: false);
+            arte.preserveAspect = true;
+
+            Text nombreObjeto = ConstructorDeInterfaz.Texto("Nombre", raiz,
+                new Vector2(0f, 58f), new Vector2(96f, 22f), "", 12);
+            Text bonusAtaque = ConstructorDeInterfaz.Texto("BonusAtaque", raiz,
+                new Vector2(-28f, -50f), new Vector2(28f, 20f), "", 14);
+            Text bonusVida = ConstructorDeInterfaz.Texto("BonusVida", raiz,
+                new Vector2(0f, -50f), new Vector2(28f, 20f), "", 14);
+            Text bonusCura = ConstructorDeInterfaz.Texto("BonusCura", raiz,
+                new Vector2(28f, -50f), new Vector2(28f, 20f), "", 14);
+
+            ConstructorDeInterfaz.Cablear(vista,
+                ("nombre", nombreObjeto),
+                ("bonusAtaque", bonusAtaque),
+                ("bonusVida", bonusVida),
+                ("bonusCura", bonusCura),
                 ("arte", arte));
 
             return vista;

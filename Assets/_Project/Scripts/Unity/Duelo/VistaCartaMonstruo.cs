@@ -26,6 +26,9 @@ namespace ManaMaster.Unity.Duelo
         [Header("Arte")]
         [SerializeField] private Image arte;
 
+        [Tooltip("Se enciende con el arte del objeto equipado, o se apaga si no lleva ninguno.")]
+        [SerializeField] private Image iconoObjeto;
+
         /// <summary>
         /// Vida a mostrar en lugar de la actual, o null para usar la real.
         /// </summary>
@@ -84,11 +87,21 @@ namespace ManaMaster.Unity.Duelo
 
             IMonsterCard definicion = Carta.Definition;
 
+            // Ataque y cura salen de Carta, no de la definicion: si lleva un
+            // objeto equipado, Carta.Attack/HealPerTurn ya incluyen su bonus
+            // (ver CardInstance), y es lo que el jugador va a notar en combate.
             Escribir(nombre, definicion.DisplayName);
-            Escribir(ataque, definicion.Attack.ToString());
+            Escribir(ataque, Carta.Attack.ToString());
             Escribir(mana, definicion.ManaCost.ToString());
-            Escribir(cura, definicion.HealPerTurn.ToString());
+            Escribir(cura, Carta.HealPerTurn.ToString());
             Escribir(vida, (_vidaForzada ?? Carta.CurrentHealth).ToString());
+
+            if (iconoObjeto != null)
+            {
+                Sprite iconoDelObjeto = (Carta.EquippedItem as CardDefinition)?.Artwork;
+                iconoObjeto.sprite = iconoDelObjeto;
+                iconoObjeto.enabled = Carta.EquippedItem != null;
+            }
 
             if (arte == null)
             {
