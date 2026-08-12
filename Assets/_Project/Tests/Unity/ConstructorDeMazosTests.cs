@@ -122,6 +122,65 @@ namespace ManaMaster.Unity.Tests
             }
         }
 
+        [Test]
+        public void DesdeSeleccionConstruyeElMazoEnElOrdenDado()
+        {
+            CardCatalog catalogo = CatalogoDePrueba(10);
+            string[] seleccion =
+            {
+                "Monstruo0", "Monstruo0", "Monstruo1", "Monstruo2", "Monstruo3",
+                "Monstruo4", "Monstruo5", "Monstruo6", "Monstruo7", "Monstruo8",
+            };
+
+            Deck mazo = ConstructorDeMazos.DesdeSeleccion(catalogo, seleccion);
+
+            Assert.That(mazo.Count, Is.EqualTo(10));
+            for (int i = 0; i < seleccion.Length; i++)
+            {
+                Assert.That(mazo.Cartas[i].Definition.CardId, Is.EqualTo(seleccion[i]));
+            }
+        }
+
+        [Test]
+        public void DesdeSeleccionConUnNumeroDeCartasDistintoDeDiezEsUnError()
+        {
+            CardCatalog catalogo = CatalogoDePrueba(10);
+
+            Assert.That(
+                () => ConstructorDeMazos.DesdeSeleccion(catalogo, new[] { "Monstruo0" }),
+                Throws.ArgumentException);
+        }
+
+        [Test]
+        public void DesdeSeleccionConUnCardIdQueNoExisteEsUnError()
+        {
+            CardCatalog catalogo = CatalogoDePrueba(10);
+            string[] seleccion =
+            {
+                "NoExiste", "Monstruo0", "Monstruo1", "Monstruo2", "Monstruo3",
+                "Monstruo4", "Monstruo5", "Monstruo6", "Monstruo7", "Monstruo8",
+            };
+
+            Assert.That(
+                () => ConstructorDeMazos.DesdeSeleccion(catalogo, seleccion),
+                Throws.ArgumentException);
+        }
+
+        [Test]
+        public void DesdeSeleccionConMasDeDosCopiasEsUnError()
+        {
+            CardCatalog catalogo = CatalogoDePrueba(10);
+            string[] seleccion =
+            {
+                "Monstruo0", "Monstruo0", "Monstruo0", "Monstruo1", "Monstruo2",
+                "Monstruo3", "Monstruo4", "Monstruo5", "Monstruo6", "Monstruo7",
+            };
+
+            Assert.That(
+                () => ConstructorDeMazos.DesdeSeleccion(catalogo, seleccion),
+                Throws.ArgumentException);
+        }
+
         /// <summary>
         /// Catalogo de mentira con N monstruos distintos. El CardId es el nombre
         /// del asset, asi que basta con darles nombres distintos.

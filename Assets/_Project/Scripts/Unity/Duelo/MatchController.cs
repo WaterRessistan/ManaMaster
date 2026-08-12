@@ -5,6 +5,7 @@ using ManaMaster.Core.Combat;
 using ManaMaster.Core.Match;
 using ManaMaster.Core.Util;
 using ManaMaster.Unity.Cards;
+using ManaMaster.Unity.Sesion;
 using UnityEngine;
 
 namespace ManaMaster.Unity.Duelo
@@ -43,6 +44,12 @@ namespace ManaMaster.Unity.Duelo
                  "la partida entera: mismo reparto, mismo jugador inicial y " +
                  "mismas decisiones de la IA.")]
         [SerializeField] private int semilla;
+
+        [Header("Sesion")]
+        [Tooltip("Assets/_Project/Content/Session/SesionDeJuego.asset. Si trae " +
+                 "un mazo elegido en deckbuild, se usa ese para el humano en " +
+                 "vez de generar uno aleatorio. Puede dejarse sin cablear.")]
+        [SerializeField] private SesionDeJuego sesion;
 
         private IMatchAgent _agenteRival;
 
@@ -104,8 +111,7 @@ namespace ManaMaster.Unity.Duelo
             SemillaEnUso = semilla != 0 ? semilla : Environment.TickCount;
             IRandom azar = new SystemRandom(SemillaEnUso);
 
-            Humano = new PlayerState(
-                nombreHumano, ConstructorDeMazos.Aleatorio(catalogo, azar, cartasPorMazo));
+            Humano = new PlayerState(nombreHumano, MazoDelHumano(azar));
             Rival = new PlayerState(
                 nombreRival, ConstructorDeMazos.Aleatorio(catalogo, azar, cartasPorMazo));
 
@@ -116,6 +122,26 @@ namespace ManaMaster.Unity.Duelo
             Partida = new MatchState(Humano, Rival, azar);
 
             Avisar();
+        }
+
+        /// <summary>
+        /// El mazo del humano viene de la sesion si eligio uno en deckbuild;
+        /// si no, se genera al azar como hasta ahora.
+        /// </summary>
+        private Deck MazoDelHumano(IRandom azar)
+        {
+            if (sesion == null || !sesion.TieneMazoElegido)
+            {
+                return ConstructorDeMazos.Aleatorio(catalogo, azar, cartasPorMazo);
+            }
+
+            Deck mazo = ConstructorDeMazos.DesdeSeleccion(catalogo, sesion.MazoHumano);
+
+            // Llega en el orden en que se eligio en deckbuild: barajarlo evita
+            // que ese orden filtre la mano inicial.
+            mazo.Shuffle(azar);
+
+            return mazo;
         }
 
         /// <summary>Despliega una carta de la mano del jugador activo.</summary>

@@ -81,6 +81,67 @@ namespace ManaMaster.Unity.Cards
             return new Deck(mazo);
         }
 
+        /// <summary>
+        /// Mazo a partir de una seleccion concreta de cartas, hecha en la
+        /// pantalla de deckbuild.
+        /// </summary>
+        /// <remarks>
+        /// Valida el reglamento (DESIGN.md §8) por su cuenta aunque la interfaz
+        /// de deckbuild ya deba impedir estos casos: es la ultima linea de
+        /// defensa antes de montar la partida. No baraja: la seleccion llega en
+        /// el orden en que el jugador la fue eligiendo, y barajarla es cosa de
+        /// quien monta la partida.
+        /// </remarks>
+        public static Deck DesdeSeleccion(CardCatalog catalogo, IReadOnlyList<string> cardIds)
+        {
+            if (catalogo == null)
+            {
+                throw new ArgumentNullException(nameof(catalogo));
+            }
+
+            if (cardIds == null)
+            {
+                throw new ArgumentNullException(nameof(cardIds));
+            }
+
+            if (cardIds.Count != CartasPorMazo)
+            {
+                throw new ArgumentException(
+                    $"La seleccion tiene {cardIds.Count} cartas; un mazo son " +
+                    $"exactamente {CartasPorMazo} (DESIGN.md §8).",
+                    nameof(cardIds));
+            }
+
+            List<CardInstance> mazo = new(cardIds.Count);
+            Dictionary<string, int> copias = new();
+
+            foreach (string cardId in cardIds)
+            {
+                MonsterCardDefinition definicion = catalogo.FindMonster(cardId);
+                if (definicion == null)
+                {
+                    throw new ArgumentException(
+                        $"'{cardId}' no existe en el catalogo '{catalogo.name}'.",
+                        nameof(cardIds));
+                }
+
+                int vistas = copias.TryGetValue(cardId, out int n) ? n + 1 : 1;
+                copias[cardId] = vistas;
+
+                if (vistas > MaxCopiasPorCarta)
+                {
+                    throw new ArgumentException(
+                        $"'{cardId}' aparece {vistas} veces; el maximo son " +
+                        $"{MaxCopiasPorCarta} copias (DESIGN.md §8).",
+                        nameof(cardIds));
+                }
+
+                mazo.Add(new CardInstance(definicion));
+            }
+
+            return new Deck(mazo);
+        }
+
         private static void Barajar<T>(IList<T> lista, IRandom azar)
         {
             for (int i = lista.Count - 1; i > 0; i--)
