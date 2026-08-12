@@ -24,8 +24,9 @@ namespace ManaMaster.Unity.Tienda
         [SerializeField] private Button comprar;
         [SerializeField] private SesionDeJuego sesion;
 
-        [Tooltip("Carta concreta que se compra. Vacio = esta oferta es el sobre.")]
-        [SerializeField] private MonsterCardDefinition carta;
+        [Tooltip("Carta concreta que se compra (monstruo u objeto). Vacio = " +
+                 "esta oferta es el sobre.")]
+        [SerializeField] private CardDefinition carta;
 
         [Tooltip("Solo hace falta si 'carta' esta vacio, para elegir las del sobre.")]
         [SerializeField] private CardCatalog catalogo;

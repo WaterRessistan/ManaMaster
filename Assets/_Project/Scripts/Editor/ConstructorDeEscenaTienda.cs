@@ -76,6 +76,26 @@ namespace ManaMaster.Herramientas
                 }
             }
 
+            ConstructorDeInterfaz.Texto("TituloObjetos", lienzo.transform,
+                new Vector2(0f, -280f), new Vector2(700f, 50f), "Objetos", 28);
+
+            if (catalogo != null)
+            {
+                for (int i = 0; i < catalogo.Items.Count; i++)
+                {
+                    ItemCardDefinition definicion = catalogo.Items[i];
+                    if (definicion == null)
+                    {
+                        continue;
+                    }
+
+                    float x = (i - (catalogo.Items.Count - 1) * 0.5f) * SeparacionX;
+
+                    Oferta(lienzo.transform, new Vector2(x, -420f),
+                        definicion.DisplayName, sesion, definicion, catalogo: null);
+                }
+            }
+
             Volver(lienzo.transform);
 
             System.IO.Directory.CreateDirectory(
@@ -91,7 +111,7 @@ namespace ManaMaster.Herramientas
 
         private static VistaOfertaTienda Oferta(
             Transform padre, Vector2 posicion, string etiqueta,
-            SesionDeJuego sesion, MonsterCardDefinition carta, CardCatalog catalogo)
+            SesionDeJuego sesion, CardDefinition carta, CardCatalog catalogo)
         {
             Image fondo = ConstructorDeInterfaz.Panel("Oferta", padre, posicion,
                 TamanoOferta, new Color(0.15f, 0.17f, 0.24f, 1f));
