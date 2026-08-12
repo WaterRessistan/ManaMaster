@@ -3,11 +3,11 @@ using ManaMaster.Core.Board;
 using ManaMaster.Core.Match;
 using ManaMaster.Unity.Cards;
 using ManaMaster.Unity.Duelo;
+using ManaMaster.Unity.Navegacion;
+using ManaMaster.Unity.Sesion;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
-using UnityEngine.EventSystems;
-using UnityEngine.InputSystem.UI;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
@@ -31,8 +31,7 @@ namespace ManaMaster.Herramientas
     {
         public const string RutaEscena = "Assets/_Project/Scenes/Duelo.unity";
 
-        private const string RutaCatalogo =
-            "Assets/_Project/Content/Cards/CardCatalog.asset";
+        private static readonly Color ColorDeFondo = new(0.07f, 0.08f, 0.12f, 1f);
 
         private static readonly Vector2 TamanoCarta = new(130f, 180f);
         private static readonly Vector2 TamanoCarril = new(150f, 200f);
@@ -52,8 +51,8 @@ namespace ManaMaster.Herramientas
             Scene escena = EditorSceneManager.NewScene(
                 NewSceneSetup.EmptyScene, NewSceneMode.Single);
 
-            Camara();
-            SistemaDeEventos();
+            ConstructorDeEscenaComun.Camara(ColorDeFondo);
+            ConstructorDeEscenaComun.SistemaDeEventos();
 
             Canvas lienzo = Lienzo();
 
@@ -76,52 +75,17 @@ namespace ManaMaster.Herramientas
             EditorSceneManager.MarkSceneDirty(escena);
             EditorSceneManager.SaveScene(escena, RutaEscena);
 
-            AnadirABuildSettings();
+            ConstructorDeEscenaComun.AnadirABuildSettings(RutaEscena);
 
             Debug.Log($"[ConstructorDeEscenaDuelo] Escena regenerada en {RutaEscena}");
         }
 
-        private static void Camara()
-        {
-            GameObject objeto = new("Camara", typeof(Camera));
-            Camera camara = objeto.GetComponent<Camera>();
-
-            camara.clearFlags = CameraClearFlags.SolidColor;
-            camara.backgroundColor = new Color(0.07f, 0.08f, 0.12f, 1f);
-            camara.orthographic = true;
-            camara.tag = "MainCamera";
-
-            objeto.transform.position = new Vector3(0f, 0f, -10f);
-        }
-
-        /// <summary>
-        /// El modulo de entrada tiene que ser el del Input System nuevo: el
-        /// proyecto tiene desactivado el antiguo y <c>StandaloneInputModule</c>
-        /// reventaria al arrancar.
-        /// </summary>
-        private static void SistemaDeEventos()
-        {
-            GameObject objeto = new("EventSystem", typeof(EventSystem));
-            objeto.AddComponent<InputSystemUIInputModule>();
-        }
-
         private static Canvas Lienzo()
         {
-            GameObject objeto = new("Canvas",
-                typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
-
-            Canvas lienzo = objeto.GetComponent<Canvas>();
-            lienzo.renderMode = RenderMode.ScreenSpaceOverlay;
-
-            CanvasScaler escalador = objeto.GetComponent<CanvasScaler>();
-            escalador.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
-            escalador.referenceResolution = new Vector2(1920f, 1080f);
-            escalador.screenMatchMode =
-                CanvasScaler.ScreenMatchMode.MatchWidthOrHeight;
-            escalador.matchWidthOrHeight = 0.5f;
+            Canvas lienzo = ConstructorDeEscenaComun.Lienzo();
 
             // Linea divisoria entre los dos bandos.
-            ConstructorDeInterfaz.Panel("LineaCentral", objeto.transform,
+            ConstructorDeInterfaz.Panel("LineaCentral", lienzo.transform,
                 new Vector2(0f, 55f), new Vector2(1400f, 4f),
                 new Color(1f, 1f, 1f, 0.15f), recibeClics: false);
 
@@ -137,7 +101,10 @@ namespace ManaMaster.Herramientas
             MatchController controlador = objeto.GetComponent<MatchController>();
 
             ConstructorDeInterfaz.Cablear(controlador,
-                ("catalogo", AssetDatabase.LoadAssetAtPath<CardCatalog>(RutaCatalogo)));
+                ("catalogo", AssetDatabase.LoadAssetAtPath<CardCatalog>(
+                    ConstructorDeEscenaComun.RutaCatalogo)),
+                ("sesion", AssetDatabase.LoadAssetAtPath<SesionDeJuego>(
+                    ConstructorDeEscenaComun.RutaSesion)));
 
             return controlador;
         }
@@ -314,8 +281,17 @@ namespace ManaMaster.Herramientas
                 new Vector2(0f, 10f), new Vector2(560f, 80f), "", 24);
 
             Button revancha = ConstructorDeInterfaz.Boton("BotonRevancha",
-                panel.transform, new Vector2(0f, -100f), new Vector2(260f, 70f),
+                panel.transform, new Vector2(-140f, -100f), new Vector2(250f, 70f),
                 "Otra partida", out _);
+
+            Button volverAlMenu = ConstructorDeInterfaz.Boton("BotonVolverAlMenu",
+                panel.transform, new Vector2(140f, -100f), new Vector2(250f, 70f),
+                "Volver al menu", out _);
+            BotonDeNavegacion navegacion =
+                volverAlMenu.gameObject.AddComponent<BotonDeNavegacion>();
+            ConstructorDeInterfaz.CablearString(navegacion, "nombreEscena", "Inicio");
+            UnityEditor.Events.UnityEventTools.AddPersistentListener(
+                volverAlMenu.onClick, navegacion.Ir);
 
             panel.gameObject.SetActive(false);
 
@@ -384,19 +360,6 @@ namespace ManaMaster.Herramientas
                 ("arte", arte));
 
             return vista;
-        }
-
-        private static void AnadirABuildSettings()
-        {
-            List<EditorBuildSettingsScene> escenas = new(EditorBuildSettings.scenes);
-
-            if (escenas.Exists(e => e.path == RutaEscena))
-            {
-                return;
-            }
-
-            escenas.Insert(0, new EditorBuildSettingsScene(RutaEscena, enabled: true));
-            EditorBuildSettings.scenes = escenas.ToArray();
         }
     }
 }
