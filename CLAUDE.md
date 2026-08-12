@@ -81,11 +81,16 @@ entienden los dos.
 Fases y orden de ejecución, en `DESIGN.md` §11. Resumen:
 
 - **Hecho**: Fase 1 (saneamiento), Fase 0 (andamiaje), Fase 2 (motor de reglas),
-  Fase 3 (duelo jugable contra la IA) y Fase 5 (las 4 pantallas y el flujo
-  entre ellas).
-- **Siguiente**: Fase 4, persistencia local, colección y diamantes. Hoy el
-  mazo elegido en deckbuild y el resto de datos de las 4 pantallas viven solo
-  en memoria (`SesionDeJuego`), sin guardarse en disco.
+  Fase 3 (duelo jugable contra la IA), Fase 5 (las 4 pantallas y el flujo
+  entre ellas) y Fase 4 (persistencia local, colección, diamantes).
+  `SesionDeJuego` guarda diamantes, colección y mazo elegido en un JSON en
+  `Application.persistentDataPath`, local y sin protección contra
+  manipulación a propósito — no hay online todavía (ver Fase 9). La Tienda
+  gasta diamantes de verdad, Deckbuild solo deja añadir cartas que se poseen,
+  y terminar una partida reparte diamantes.
+- **Siguiente**: Fase 6, contenido, balanceo, arte y audio. Sigue faltando
+  todo el set de cartas de objeto (0 hoy) y las legendarias (0 hoy), así como
+  afinar los valores provisionales de `DESIGN.md` §9 y §10.
 - El prototipo de `Assets/Scripts/` ya no existe: lo sustituyen el motor del
   Core y las vistas de `ManaMaster.Unity`.
 
