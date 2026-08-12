@@ -1,5 +1,6 @@
 using ManaMaster.Unity.Cards;
 using ManaMaster.Unity.Navegacion;
+using ManaMaster.Unity.Sesion;
 using ManaMaster.Unity.Tienda;
 using UnityEditor;
 using UnityEditor.SceneManagement;
@@ -13,9 +14,8 @@ namespace ManaMaster.Herramientas
     /// Genera la escena de Tienda: sobres y cartas sueltas (DESIGN.md §10).
     /// </summary>
     /// <remarks>
-    /// Fase 5: solo navegacion. Los precios son los provisionales del §10 y
-    /// "Comprar" no gasta nada real todavia — no hay diamantes de mentira que
-    /// mostrar ni coleccion que ampliar, eso llega con la Fase 4.
+    /// Los precios son los provisionales del §10. "Comprar" gasta diamantes
+    /// de verdad de la sesion del jugador (Fase 4).
     /// </remarks>
     public static class ConstructorDeEscenaTienda
     {
@@ -42,11 +42,16 @@ namespace ManaMaster.Herramientas
             ConstructorDeInterfaz.Texto("Titulo", lienzo.transform,
                 new Vector2(0f, 460f), new Vector2(700f, 80f), "Tienda", 48);
 
-            Oferta(lienzo.transform, new Vector2(0f, 300f),
-                "Sobre (3 cartas, ≥1 Rara)", PreciosTienda.Sobre);
-
+            SesionDeJuego sesion = AssetDatabase.LoadAssetAtPath<SesionDeJuego>(
+                ConstructorDeEscenaComun.RutaSesion);
             CardCatalog catalogo = AssetDatabase.LoadAssetAtPath<CardCatalog>(
                 ConstructorDeEscenaComun.RutaCatalogo);
+
+            Diamantes(lienzo.transform, sesion);
+
+            Oferta(lienzo.transform, new Vector2(0f, 300f),
+                "Sobre (3 cartas, ≥1 Rara)", PreciosTienda.Sobre,
+                sesion, carta: null, catalogo);
 
             ConstructorDeInterfaz.Texto("TituloCartasSueltas", lienzo.transform,
                 new Vector2(0f, 140f), new Vector2(700f, 50f), "Cartas sueltas", 28);
@@ -69,7 +74,8 @@ namespace ManaMaster.Herramientas
 
                     Oferta(lienzo.transform, new Vector2(x, y),
                         definicion.DisplayName,
-                        PreciosTienda.DeCartaSuelta(definicion.Rarity));
+                        PreciosTienda.DeCartaSuelta(definicion.Rarity),
+                        sesion, definicion, catalogo: null);
                 }
             }
 
@@ -87,7 +93,8 @@ namespace ManaMaster.Herramientas
         }
 
         private static VistaOfertaTienda Oferta(
-            Transform padre, Vector2 posicion, string etiqueta, int precio)
+            Transform padre, Vector2 posicion, string etiqueta, int precio,
+            SesionDeJuego sesion, MonsterCardDefinition carta, CardCatalog catalogo)
         {
             Image fondo = ConstructorDeInterfaz.Panel("Oferta", padre, posicion,
                 TamanoOferta, new Color(0.15f, 0.17f, 0.24f, 1f));
@@ -107,7 +114,10 @@ namespace ManaMaster.Herramientas
             ConstructorDeInterfaz.Cablear(vista,
                 ("nombre", nombre),
                 ("precio", precioTexto),
-                ("comprar", comprar));
+                ("comprar", comprar),
+                ("sesion", sesion),
+                ("carta", carta),
+                ("catalogo", catalogo));
 
             UnityEditor.Events.UnityEventTools.AddPersistentListener(
                 comprar.onClick, vista.Comprar);
@@ -115,6 +125,16 @@ namespace ManaMaster.Herramientas
             vista.Mostrar(etiqueta, precio);
 
             return vista;
+        }
+
+        private static void Diamantes(Transform padre, SesionDeJuego sesion)
+        {
+            Text texto = ConstructorDeInterfaz.Texto("Diamantes", padre,
+                new Vector2(820f, 460f), new Vector2(240f, 60f), "", 28,
+                TextAnchor.MiddleRight);
+
+            VistaDiamantes vista = texto.gameObject.AddComponent<VistaDiamantes>();
+            ConstructorDeInterfaz.Cablear(vista, ("sesion", sesion), ("texto", texto));
         }
 
         private static void Volver(Transform padre)
