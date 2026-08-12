@@ -17,3 +17,6 @@ MonoBehaviour:
   rarity: 1
   manaCost: 1
   effectDescription: '+1 a la cura por turno del monstruo que lo lleve.'
+  bonusAttack: 0
+  bonusMaxHealth: 0
+  bonusHealPerTurn: 1

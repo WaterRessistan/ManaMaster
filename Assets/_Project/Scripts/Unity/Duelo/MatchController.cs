@@ -115,8 +115,14 @@ namespace ManaMaster.Unity.Duelo
             IRandom azar = new SystemRandom(SemillaEnUso);
 
             Humano = new PlayerState(nombreHumano, MazoDelHumano(azar));
+            Humano.IniciarObjetos(MazoDeObjetosDelHumano(azar));
+
             Rival = new PlayerState(
                 nombreRival, ConstructorDeMazos.Aleatorio(catalogo, azar, cartasPorMazo));
+
+            // El Rival no recibe mazo de objetos: AgenteHeuristico no sabe
+            // equiparlos todavia, asi que su mano de objetos se queda vacia
+            // (valor por defecto de PlayerState).
 
             _agenteRival = new AgenteHeuristico();
 
@@ -145,6 +151,41 @@ namespace ManaMaster.Unity.Duelo
             mazo.Shuffle(azar);
 
             return mazo;
+        }
+
+        /// <summary>
+        /// El mazo de objetos del humano viene de la sesion si eligio uno en
+        /// deckbuild; si no, se genera al azar, igual que el de monstruos.
+        /// </summary>
+        private ItemDeck MazoDeObjetosDelHumano(IRandom azar)
+        {
+            if (sesion == null || !sesion.TieneMazoObjetosElegido)
+            {
+                return ConstructorDeMazos.ObjetosAleatorio(
+                    catalogo, azar, ConstructorDeMazos.CartasPorMazoDeObjetos);
+            }
+
+            ItemDeck mazo = ConstructorDeMazos.ObjetosDesdeSeleccion(catalogo, sesion.MazoObjetos);
+            mazo.Shuffle(azar);
+
+            return mazo;
+        }
+
+        /// <summary>Equipa un objeto de la mano del jugador activo (DESIGN.md §4).</summary>
+        public ResultadoEquipar EquiparObjeto(int huecoManoObjeto, int carril)
+        {
+            if (!HayPartida)
+            {
+                return ResultadoEquipar.HuecoVacio;
+            }
+
+            ResultadoEquipar resultado = Partida.Equipar(huecoManoObjeto, carril);
+            if (resultado == ResultadoEquipar.Ok)
+            {
+                Avisar();
+            }
+
+            return resultado;
         }
 
         /// <summary>Despliega una carta de la mano del jugador activo.</summary>

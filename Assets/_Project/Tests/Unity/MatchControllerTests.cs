@@ -61,6 +61,21 @@ namespace ManaMaster.Unity.Tests
             Assert.That(catalogo.Monsters.Count, Is.GreaterThan(0));
         }
 
+        /// <summary>
+        /// El humano tambien recibe un mazo de objetos de verdad (DESIGN.md
+        /// §4); el Rival no, porque AgenteHeuristico no sabe equiparlos.
+        /// </summary>
+        [Test]
+        public void ComenzarMontaTambienElMazoDeObjetosDelHumano()
+        {
+            MatchController controlador = Controlador(semilla: 1);
+
+            controlador.Comenzar();
+
+            Assert.That(controlador.Humano.ManoDeObjetos.Count, Is.EqualTo(2));
+            Assert.That(controlador.Rival.ManoDeObjetos.IsEmpty, Is.True);
+        }
+
         [Test]
         public void MontaUnaPartidaConLosDosMazosRepartidos()
         {

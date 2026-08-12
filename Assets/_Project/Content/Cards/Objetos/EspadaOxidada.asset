@@ -17,3 +17,6 @@ MonoBehaviour:
   rarity: 0
   manaCost: 1
   effectDescription: '+1 al ataque del monstruo que la lleve.'
+  bonusAttack: 1
+  bonusMaxHealth: 0
+  bonusHealPerTurn: 0

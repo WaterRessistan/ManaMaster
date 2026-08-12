@@ -53,10 +53,11 @@ namespace ManaMaster.Unity.Sesion
         private const int DiamantesDeCuentaNueva = 500;
 
         [Tooltip("Solo para inicializar la cuenta nueva: coleccion completa y " +
-                 "un mazo de monstruos ya listo para jugar.")]
+                 "un mazo de monstruos y otro de objetos ya listos para jugar.")]
         [SerializeField] private CardCatalog catalogo;
 
         private readonly List<string> _mazoHumano = new();
+        private readonly List<string> _mazoObjetos = new();
         private readonly Dictionary<string, int> _coleccion = new();
         private int _diamantes;
         private bool _cargado;
@@ -82,6 +83,18 @@ namespace ManaMaster.Unity.Sesion
         public bool TieneMazoElegido
         {
             get { AsegurarCargado(); return _mazoHumano.Count > 0; }
+        }
+
+        /// <summary>CardId de los objetos elegidos en Deckbuild, en orden de eleccion.</summary>
+        public IReadOnlyList<string> MazoObjetos
+        {
+            get { AsegurarCargado(); return _mazoObjetos; }
+        }
+
+        /// <summary>Si hay un mazo de objetos elegido en esta sesion.</summary>
+        public bool TieneMazoObjetosElegido
+        {
+            get { AsegurarCargado(); return _mazoObjetos.Count > 0; }
         }
 
         /// <summary>Copias que el jugador posee de esa carta (0 si ninguna).</summary>
@@ -110,6 +123,20 @@ namespace ManaMaster.Unity.Sesion
         {
             AsegurarCargado();
             _mazoHumano.Clear();
+            GuardarYAvisar();
+        }
+
+        /// <summary>Guarda el mazo de objetos elegido en Deckbuild, sustituyendo el anterior.</summary>
+        public void FijarMazoObjetos(IEnumerable<string> cardIds)
+        {
+            if (cardIds == null)
+            {
+                throw new ArgumentNullException(nameof(cardIds));
+            }
+
+            AsegurarCargado();
+            _mazoObjetos.Clear();
+            _mazoObjetos.AddRange(cardIds);
             GuardarYAvisar();
         }
 
@@ -176,6 +203,7 @@ namespace ManaMaster.Unity.Sesion
             _cargado = false;
             _diamantes = 0;
             _mazoHumano.Clear();
+            _mazoObjetos.Clear();
             _coleccion.Clear();
         }
 
@@ -204,6 +232,7 @@ namespace ManaMaster.Unity.Sesion
             Datos datos = JsonUtility.FromJson<Datos>(File.ReadAllText(ruta));
             _diamantes = datos.diamantes;
             _mazoHumano.AddRange(datos.mazoHumano);
+            _mazoObjetos.AddRange(datos.mazoObjetos);
             foreach (EntradaColeccion entrada in datos.coleccion)
             {
                 _coleccion[entrada.cardId] = entrada.copias;
@@ -212,7 +241,8 @@ namespace ManaMaster.Unity.Sesion
 
         /// <summary>
         /// Cuenta nueva (DESIGN.md §10): 500 diamantes y, si hay catalogo, la
-        /// coleccion completa con un mazo de monstruos ya listo.
+        /// coleccion completa con un mazo de monstruos y uno de objetos ya
+        /// listos.
         /// </summary>
         private void IniciarCuentaNueva()
         {
@@ -233,6 +263,17 @@ namespace ManaMaster.Unity.Sesion
             }
 
             OtorgarColeccionYMazoInicial(monstruos, _mazoHumano);
+
+            List<string> objetos = new();
+            foreach (ItemCardDefinition objeto in catalogo.Items)
+            {
+                if (objeto != null)
+                {
+                    objetos.Add(objeto.CardId);
+                }
+            }
+
+            OtorgarColeccionYMazoInicial(objetos, _mazoObjetos);
         }
 
         /// <summary>
@@ -273,6 +314,7 @@ namespace ManaMaster.Unity.Sesion
             {
                 diamantes = _diamantes,
                 mazoHumano = new List<string>(_mazoHumano),
+                mazoObjetos = new List<string>(_mazoObjetos),
             };
 
             foreach (KeyValuePair<string, int> entrada in _coleccion)
@@ -294,6 +336,7 @@ namespace ManaMaster.Unity.Sesion
         {
             public int diamantes;
             public List<string> mazoHumano = new();
+            public List<string> mazoObjetos = new();
             public List<EntradaColeccion> coleccion = new();
         }
 

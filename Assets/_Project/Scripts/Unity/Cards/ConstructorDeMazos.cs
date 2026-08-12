@@ -26,6 +26,9 @@ namespace ManaMaster.Unity.Cards
         /// <summary>Cartas de monstruo de un mazo (DESIGN.md §8).</summary>
         public const int CartasPorMazo = 10;
 
+        /// <summary>Cartas de objeto de un mazo (DESIGN.md §8: el mismo 10 que los monstruos).</summary>
+        public const int CartasPorMazoDeObjetos = 10;
+
         /// <summary>
         /// Mazo aleatorio respetando el maximo de copias por carta.
         /// </summary>
@@ -140,6 +143,108 @@ namespace ManaMaster.Unity.Cards
             }
 
             return new Deck(mazo);
+        }
+
+        /// <summary>
+        /// Mazo de objetos aleatorio respetando el maximo de copias por
+        /// carta. Mismo patron que <see cref="Aleatorio"/>, pero sin envolver
+        /// cada copia en una instancia propia: un objeto no tiene estado
+        /// mutable, asi que dos copias son la misma referencia repetida.
+        /// </summary>
+        public static ItemDeck ObjetosAleatorio(
+            CardCatalog catalogo, IRandom azar, int cartas = CartasPorMazoDeObjetos)
+        {
+            if (catalogo == null)
+            {
+                throw new ArgumentNullException(nameof(catalogo));
+            }
+
+            if (azar == null)
+            {
+                throw new ArgumentNullException(nameof(azar));
+            }
+
+            List<IItemCard> reserva = new();
+            foreach (ItemCardDefinition definicion in catalogo.Items)
+            {
+                if (definicion == null)
+                {
+                    continue;
+                }
+
+                for (int copia = 0; copia < MaxCopiasPorCarta; copia++)
+                {
+                    reserva.Add(definicion);
+                }
+            }
+
+            if (reserva.Count == 0)
+            {
+                throw new ArgumentException(
+                    $"El catalogo '{catalogo.name}' no tiene ninguna carta de " +
+                    "objeto, asi que no se puede montar un mazo.",
+                    nameof(catalogo));
+            }
+
+            Barajar(reserva, azar);
+
+            int aRepartir = Math.Min(cartas, reserva.Count);
+            return new ItemDeck(reserva.GetRange(0, aRepartir));
+        }
+
+        /// <summary>
+        /// Mazo de objetos a partir de una seleccion concreta hecha en
+        /// deckbuild. Mismo patron que <see cref="DesdeSeleccion"/>.
+        /// </summary>
+        public static ItemDeck ObjetosDesdeSeleccion(
+            CardCatalog catalogo, IReadOnlyList<string> cardIds)
+        {
+            if (catalogo == null)
+            {
+                throw new ArgumentNullException(nameof(catalogo));
+            }
+
+            if (cardIds == null)
+            {
+                throw new ArgumentNullException(nameof(cardIds));
+            }
+
+            if (cardIds.Count != CartasPorMazoDeObjetos)
+            {
+                throw new ArgumentException(
+                    $"La seleccion tiene {cardIds.Count} cartas; un mazo de " +
+                    $"objetos son exactamente {CartasPorMazoDeObjetos} (DESIGN.md §8).",
+                    nameof(cardIds));
+            }
+
+            List<IItemCard> mazo = new(cardIds.Count);
+            Dictionary<string, int> copias = new();
+
+            foreach (string cardId in cardIds)
+            {
+                ItemCardDefinition definicion = catalogo.FindItem(cardId);
+                if (definicion == null)
+                {
+                    throw new ArgumentException(
+                        $"'{cardId}' no existe en el catalogo '{catalogo.name}'.",
+                        nameof(cardIds));
+                }
+
+                int vistas = copias.TryGetValue(cardId, out int n) ? n + 1 : 1;
+                copias[cardId] = vistas;
+
+                if (vistas > MaxCopiasPorCarta)
+                {
+                    throw new ArgumentException(
+                        $"'{cardId}' aparece {vistas} veces; el maximo son " +
+                        $"{MaxCopiasPorCarta} copias (DESIGN.md §8).",
+                        nameof(cardIds));
+                }
+
+                mazo.Add(definicion);
+            }
+
+            return new ItemDeck(mazo);
         }
 
         private static void Barajar<T>(IList<T> lista, IRandom azar)

@@ -181,6 +181,108 @@ namespace ManaMaster.Unity.Tests
                 Throws.ArgumentException);
         }
 
+        // ------------------------------------------------------------------
+        // Mazos de objetos (mismo patron, sobre catalogo.Items)
+        // ------------------------------------------------------------------
+
+        [Test]
+        public void ObjetosAleatorioReparteDiezPorDefecto()
+        {
+            ItemDeck mazo = ConstructorDeMazos.ObjetosAleatorio(
+                CatalogoDeObjetosDePrueba(8), new SystemRandom(1));
+
+            Assert.That(mazo.Count, Is.EqualTo(ConstructorDeMazos.CartasPorMazoDeObjetos));
+        }
+
+        [Test]
+        public void ObjetosAleatorioNuncaMeteMasDeDosCopiasDeLaMismaCarta()
+        {
+            ItemDeck mazo = ConstructorDeMazos.ObjetosAleatorio(
+                CatalogoDeObjetosDePrueba(6), new SystemRandom(7));
+
+            Dictionary<string, int> copias = new();
+            foreach (IItemCard objeto in mazo.Objetos)
+            {
+                copias[objeto.CardId] = copias.TryGetValue(objeto.CardId, out int n) ? n + 1 : 1;
+            }
+
+            foreach (KeyValuePair<string, int> entrada in copias)
+            {
+                Assert.That(entrada.Value,
+                    Is.LessThanOrEqualTo(ConstructorDeMazos.MaxCopiasPorCarta),
+                    $"'{entrada.Key}' aparece {entrada.Value} veces");
+            }
+        }
+
+        [Test]
+        public void UnCatalogoSinObjetosEsUnError()
+        {
+            Assert.That(
+                () => ConstructorDeMazos.ObjetosAleatorio(
+                    CatalogoDeObjetosDePrueba(0), new SystemRandom(1)),
+                Throws.ArgumentException);
+        }
+
+        [Test]
+        public void ObjetosDesdeSeleccionConstruyeElMazoEnElOrdenDado()
+        {
+            CardCatalog catalogo = CatalogoDeObjetosDePrueba(10);
+            string[] seleccion =
+            {
+                "Objeto0", "Objeto0", "Objeto1", "Objeto2", "Objeto3",
+                "Objeto4", "Objeto5", "Objeto6", "Objeto7", "Objeto8",
+            };
+
+            ItemDeck mazo = ConstructorDeMazos.ObjetosDesdeSeleccion(catalogo, seleccion);
+
+            Assert.That(mazo.Count, Is.EqualTo(10));
+            for (int i = 0; i < seleccion.Length; i++)
+            {
+                Assert.That(mazo.Objetos[i].CardId, Is.EqualTo(seleccion[i]));
+            }
+        }
+
+        [Test]
+        public void ObjetosDesdeSeleccionConMasDeDosCopiasEsUnError()
+        {
+            CardCatalog catalogo = CatalogoDeObjetosDePrueba(10);
+            string[] seleccion =
+            {
+                "Objeto0", "Objeto0", "Objeto0", "Objeto1", "Objeto2",
+                "Objeto3", "Objeto4", "Objeto5", "Objeto6", "Objeto7",
+            };
+
+            Assert.That(
+                () => ConstructorDeMazos.ObjetosDesdeSeleccion(catalogo, seleccion),
+                Throws.ArgumentException);
+        }
+
+        /// <summary>Catalogo de mentira con N objetos distintos.</summary>
+        private CardCatalog CatalogoDeObjetosDePrueba(int objetos)
+        {
+            CardCatalog catalogo = ScriptableObject.CreateInstance<CardCatalog>();
+            catalogo.name = "CatalogoDeObjetosDePrueba";
+            _creados.Add(catalogo);
+
+            SerializedObject serializado = new(catalogo);
+            SerializedProperty lista = serializado.FindProperty("items");
+            lista.arraySize = objetos;
+
+            for (int i = 0; i < objetos; i++)
+            {
+                ItemCardDefinition definicion =
+                    ScriptableObject.CreateInstance<ItemCardDefinition>();
+                definicion.name = $"Objeto{i}";
+                _creados.Add(definicion);
+
+                lista.GetArrayElementAtIndex(i).objectReferenceValue = definicion;
+            }
+
+            serializado.ApplyModifiedPropertiesWithoutUndo();
+
+            return catalogo;
+        }
+
         /// <summary>
         /// Catalogo de mentira con N monstruos distintos. El CardId es el nombre
         /// del asset, asi que basta con darles nombres distintos.

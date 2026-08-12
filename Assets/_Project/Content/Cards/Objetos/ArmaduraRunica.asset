@@ -17,3 +17,6 @@ MonoBehaviour:
   rarity: 2
   manaCost: 1
   effectDescription: '+1 al ataque y +3 a la vida maxima del monstruo que la lleve.'
+  bonusAttack: 1
+  bonusMaxHealth: 3
+  bonusHealPerTurn: 0
