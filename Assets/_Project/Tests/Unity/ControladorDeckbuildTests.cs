@@ -174,12 +174,42 @@ namespace ManaMaster.Unity.Tests
             Assert.That(_sesion.TieneMazoElegido, Is.False);
         }
 
-        private ControladorDeckbuild Controlador(int monstruosEnCatalogo)
+        [Test]
+        public void NoSePuedeAnadirUnaCartaQueNoSePosee()
+        {
+            ControladorDeckbuild controlador = Controlador(10, copiasPoseidasPorCarta: 0);
+
+            bool anadida = controlador.Anadir("Monstruo0");
+
+            Assert.That(anadida, Is.False);
+            Assert.That(controlador.Total, Is.EqualTo(0));
+        }
+
+        [Test]
+        public void NoSePuedeAnadirMasCopiasDeLasQueSePoseenAunqueElReglamentoPermitaDos()
+        {
+            ControladorDeckbuild controlador = Controlador(10, copiasPoseidasPorCarta: 1);
+
+            bool primera = controlador.Anadir("Monstruo0");
+            bool segunda = controlador.Anadir("Monstruo0");
+
+            Assert.That(primera, Is.True);
+            Assert.That(segunda, Is.False, "solo se posee 1 copia");
+            Assert.That(controlador.Copias("Monstruo0"), Is.EqualTo(1));
+        }
+
+        private ControladorDeckbuild Controlador(
+            int monstruosEnCatalogo, int copiasPoseidasPorCarta = 2)
         {
             _catalogo = CatalogoDePrueba(monstruosEnCatalogo);
             _sesion = ScriptableObject.CreateInstance<SesionDeJuego>();
             _rutaTemporal = Path.Combine(Path.GetTempPath(), $"manamaster-test-{System.Guid.NewGuid()}.json");
             _sesion.UsarRutaDeGuardadoParaTests(_rutaTemporal);
+
+            for (int i = 0; i < monstruosEnCatalogo; i++)
+            {
+                _sesion.AnadirAColeccion($"Monstruo{i}", copiasPoseidasPorCarta);
+            }
 
             _objeto = new GameObject("ControladorDeckbuild");
             ControladorDeckbuild controlador =

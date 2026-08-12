@@ -15,6 +15,8 @@ namespace ManaMaster.Unity.Deckbuild
     /// El lado de objetos del mazo no esta aqui: no hay cartas de objeto
     /// todavia en el catalogo (DESIGN.md §13), asi que ese hueco queda
     /// deshabilitado en la escena hasta que exista contenido de la Fase 6/7.
+    /// Desde la Fase 4, <see cref="Anadir"/> tambien exige poseer la carta:
+    /// una coleccion que no restringe nada no seria una coleccion.
     /// </remarks>
     [DisallowMultipleComponent]
     public sealed class ControladorDeckbuild : MonoBehaviour
@@ -49,8 +51,8 @@ namespace ManaMaster.Unity.Deckbuild
         }
 
         /// <summary>
-        /// Anade una copia de la carta si existe en el catalogo, queda hueco en
-        /// el mazo y no se supera el maximo de copias.
+        /// Anade una copia de la carta si existe en el catalogo, el jugador la
+        /// posee, queda hueco en el mazo y no se supera el maximo de copias.
         /// </summary>
         public bool Anadir(string cardId)
         {
@@ -65,6 +67,11 @@ namespace ManaMaster.Unity.Deckbuild
             }
 
             if (Copias(cardId) >= ConstructorDeMazos.MaxCopiasPorCarta)
+            {
+                return false;
+            }
+
+            if (sesion != null && Copias(cardId) >= sesion.CopiasEnColeccion(cardId))
             {
                 return false;
             }

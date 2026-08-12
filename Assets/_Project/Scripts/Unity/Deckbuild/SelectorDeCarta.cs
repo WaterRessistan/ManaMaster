@@ -100,8 +100,13 @@ namespace ManaMaster.Unity.Deckbuild
                 return;
             }
 
+            int poseidas = controlador.Sesion != null
+                ? controlador.Sesion.CopiasEnColeccion(definicion.CardId)
+                : 0;
+
             copias.text =
-                $"{controlador.Copias(definicion.CardId)}/{ConstructorDeMazos.MaxCopiasPorCarta}";
+                $"{controlador.Copias(definicion.CardId)}/{ConstructorDeMazos.MaxCopiasPorCarta} " +
+                $"(posees {poseidas})";
         }
     }
 }
