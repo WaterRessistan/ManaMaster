@@ -82,15 +82,20 @@ Fases y orden de ejecución, en `DESIGN.md` §11. Resumen:
 
 - **Hecho**: Fase 1 (saneamiento), Fase 0 (andamiaje), Fase 2 (motor de reglas),
   Fase 3 (duelo jugable contra la IA), Fase 5 (las 4 pantallas y el flujo
-  entre ellas) y Fase 4 (persistencia local, colección, diamantes).
-  `SesionDeJuego` guarda diamantes, colección y mazo elegido en un JSON en
-  `Application.persistentDataPath`, local y sin protección contra
-  manipulación a propósito — no hay online todavía (ver Fase 9). La Tienda
-  gasta diamantes de verdad, Deckbuild solo deja añadir cartas que se poseen,
-  y terminar una partida reparte diamantes.
-- **Siguiente**: Fase 6, contenido, balanceo, arte y audio. Sigue faltando
-  todo el set de cartas de objeto (0 hoy) y las legendarias (0 hoy), así como
-  afinar los valores provisionales de `DESIGN.md` §9 y §10.
+  entre ellas), Fase 4 (persistencia local, colección, diamantes) y Fase 7
+  (objetos y equipamiento, adelantada fuera de orden a petición del usuario).
+  `SesionDeJuego` guarda diamantes, colección y los dos mazos elegidos
+  (monstruos y objetos) en un JSON en `Application.persistentDataPath`, local
+  y sin protección contra manipulación a propósito — no hay online todavía
+  (ver Fase 9). La Tienda gasta diamantes de verdad y vende también objetos,
+  Deckbuild construye el mazo 10+10 completo y solo deja añadir cartas que se
+  poseen, terminar una partida reparte diamantes, y cada monstruo puede
+  equiparse con un objeto (máximo uno, no se puede quitar, se pierde si el
+  monstruo muere) que le suma un bonus numérico a ataque, vida máxima o cura.
+- **Siguiente**: Fase 6, contenido, balanceo, arte y audio. El roster actual
+  es de 9 monstruos (incluida 1 legendaria) y 5 objetos; ampliarlo, afinar
+  los valores provisionales de `DESIGN.md` §9 y §10, y el arte definitivo
+  (fuera de mi alcance en este entorno) siguen pendientes.
 - El prototipo de `Assets/Scripts/` ya no existe: lo sustituyen el motor del
   Core y las vistas de `ManaMaster.Unity`.
 
