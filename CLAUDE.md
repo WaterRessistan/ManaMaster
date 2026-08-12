@@ -80,17 +80,19 @@ entienden los dos.
 
 Fases y orden de ejecución, en `DESIGN.md` §11. Resumen:
 
-- **Hecho**: Fase 1 (saneamiento), Fase 0 (andamiaje), Fase 2 (motor de reglas)
-  y Fase 3 (duelo jugable contra la IA).
-- **Siguiente**: Fase 5, las 4 pantallas y el flujo entre ellas. Hoy solo
-  existe la de duelo, y el mazo se genera al azar en cada partida.
+- **Hecho**: Fase 1 (saneamiento), Fase 0 (andamiaje), Fase 2 (motor de reglas),
+  Fase 3 (duelo jugable contra la IA) y Fase 5 (las 4 pantallas y el flujo
+  entre ellas).
+- **Siguiente**: Fase 4, persistencia local, colección y diamantes. Hoy el
+  mazo elegido en deckbuild y el resto de datos de las 4 pantallas viven solo
+  en memoria (`SesionDeJuego`), sin guardarse en disco.
 - El prototipo de `Assets/Scripts/` ya no existe: lo sustituyen el motor del
   Core y las vistas de `ManaMaster.Unity`.
 
-**La escena de duelo se genera**, no se edita a mano: menú
-*Mana Master > Reconstruir escena de duelo*. Los retoques hechos en el editor
-se pierden al regenerarla, así que los cambios de fondo van en
-`ConstructorDeEscenaDuelo`.
+**Las 4 escenas se generan**, no se editan a mano: menú
+*Mana Master > Reconstruir todas las escenas* (o una a una, con su propio
+elemento de menú). Los retoques hechos en el editor se pierden al
+regenerarlas, así que los cambios de fondo van en cada `ConstructorDeEscena*`.
 
 Cada fase se cierra con los dos comandos de verificación en verde y un commit
 propio.

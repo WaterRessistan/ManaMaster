@@ -263,8 +263,8 @@ no se renumeran. El **orden de ejecución** es otra cosa y va aparte.
 | **0** | Andamiaje: Core sin Unity, tests, scripts de verificación | 2.º | ✅ Hecha |
 | **2** | Motor de reglas del duelo (dominio puro + tests) | 3.º | ✅ Hecha |
 | **3** | Duelo jugable contra IA | 4.º | ✅ Hecha |
-| **5** | Las 4 pantallas y el flujo entre ellas | 5.º | 🔨 Siguiente |
-| **4** | Persistencia local, colección, diamantes | 6.º | ⏳ |
+| **5** | Las 4 pantallas y el flujo entre ellas | 5.º | ✅ Hecha |
+| **4** | Persistencia local, colección, diamantes | 6.º | 🔨 Siguiente |
 | **6** | Contenido, balanceo, arte, audio | 7.º | ⏳ |
 | **7** | Objetos y equipamiento | — | Fuera de la v1 |
 | **8** | Adaptación a móvil | — | Fuera de la v1 |
