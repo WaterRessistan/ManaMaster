@@ -72,6 +72,9 @@ namespace ManaMaster.Unity.Duelo
 
         public bool HayPartida => Partida != null;
 
+        /// <summary>Sesion cableada, o null si no se cableo ninguna.</summary>
+        public SesionDeJuego Sesion => sesion;
+
         /// <summary>
         /// La partida esta en mitad de algo (tipicamente la animacion del
         /// combate) y no debe aceptar jugadas.

@@ -24,11 +24,21 @@ namespace ManaMaster.Unity.Sesion
     /// reinicio automatico deja de darse entre partidas manuales sucesivas del
     /// editor.
     /// </para>
+    /// <para>
+    /// <see cref="HideFlags.DontUnloadUnusedAsset"/> es obligatorio: al cargar
+    /// una escena en modo <c>Single</c>, Unity descarga los assets que la
+    /// escena entrante no referencia. Deckbuild guarda el mazo y vuelve a
+    /// Inicio, que no referencia esta sesion — sin esta flag, el salto por
+    /// Inicio la descargaria y Duelo cargaria una instancia nueva y vacia,
+    /// perdiendo el mazo elegido en el camino.
+    /// </para>
     /// </remarks>
     [CreateAssetMenu(menuName = "Mana Master/Sesion de juego", fileName = "SesionDeJuego")]
     public sealed class SesionDeJuego : ScriptableObject
     {
         private readonly List<string> _mazoHumano = new();
+
+        private void OnEnable() => hideFlags |= HideFlags.DontUnloadUnusedAsset;
 
         /// <summary>CardId de las cartas elegidas en Deckbuild, en orden de eleccion.</summary>
         public IReadOnlyList<string> MazoHumano => _mazoHumano;

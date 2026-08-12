@@ -12,9 +12,18 @@ namespace ManaMaster.PlayTests
     /// La escena de duelo, arrancada de verdad.
     /// </summary>
     /// <remarks>
-    /// Es la unica prueba que ejecuta el juego: carga la escena generada, deja
-    /// correr los Start, juega un turno y comprueba que el rival responde y la
-    /// ronda avanza. Sin esto, "compila" y "funciona" serian lo mismo.
+    /// <para>
+    /// Carga la escena generada, deja correr los Start, juega un turno y
+    /// comprueba que el rival responde y la ronda avanza. Sin esto, "compila"
+    /// y "funciona" serian lo mismo.
+    /// </para>
+    /// <para>
+    /// Ejercita el camino "sin mazo elegido en la sesion": la SesionDeJuego
+    /// del proyecto empieza sin <c>TieneMazoElegido</c>, asi que el humano
+    /// recibe el reparto aleatorio de siempre. El camino "con mazo elegido en
+    /// deckbuild" lo cubre <see cref="DeckbuildAlDueloTests"/>, que ademas
+    /// limpia la sesion al terminar para no dejar este camino contaminado.
+    /// </para>
     /// </remarks>
     [TestFixture]
     public sealed class EscenaDeDueloTests

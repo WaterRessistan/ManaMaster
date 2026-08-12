@@ -26,6 +26,9 @@ namespace ManaMaster.Unity.Deckbuild
         [SerializeField] private Button anadir;
         [SerializeField] private Button quitar;
 
+        /// <summary>CardId de la carta representada, o null si no se cableo ninguna.</summary>
+        public string CardId => definicion != null ? definicion.CardId : null;
+
         private void Awake()
         {
             if (vista != null && definicion != null)
