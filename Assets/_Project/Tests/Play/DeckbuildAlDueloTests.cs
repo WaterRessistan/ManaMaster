@@ -1,6 +1,8 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using ManaMaster.Core.Match;
+using ManaMaster.Unity.Cards;
 using ManaMaster.Unity.Deckbuild;
 using ManaMaster.Unity.Duelo;
 using NUnit.Framework;
@@ -14,9 +16,26 @@ namespace ManaMaster.PlayTests
     /// El mazo elegido en Deckbuild es de verdad el que juega el humano en
     /// Duelo, de punta a punta por el camino real de las escenas.
     /// </summary>
+    /// <remarks>
+    /// Redirige el guardado de la sesion real a un fichero temporal antes de
+    /// tocar nada: desde la Fase 4, guardar un mazo escribe a disco de
+    /// verdad, y este test no debe tocar el guardado del desarrollador (ver
+    /// <c>SesionDeJuego.UsarRutaDeGuardadoParaTests</c>).
+    /// </remarks>
     [TestFixture]
     public sealed class DeckbuildAlDueloTests
     {
+        private string _rutaTemporal;
+
+        [TearDown]
+        public void Limpiar()
+        {
+            if (_rutaTemporal != null && File.Exists(_rutaTemporal))
+            {
+                File.Delete(_rutaTemporal);
+            }
+        }
+
         [UnityTest]
         public IEnumerator ElMazoElegidoEnDeckbuildEsElQueJuegaElHumanoEnDuelo()
         {
@@ -25,21 +44,26 @@ namespace ManaMaster.PlayTests
             ControladorDeckbuild controlador =
                 Object.FindFirstObjectByType<ControladorDeckbuild>();
             Assert.That(controlador, Is.Not.Null, "Deckbuild no tiene ControladorDeckbuild");
+            Assert.That(controlador.Sesion, Is.Not.Null, "Deckbuild no tiene sesion cableada");
+
+            // Redirigir antes de tocar nada: la sesion de la cuenta nueva (en
+            // el fichero temporal) posee 1 copia de cada monstruo del
+            // catalogo real, que es justo lo que este test necesita elegir.
+            _rutaTemporal = Path.Combine(
+                Path.GetTempPath(), $"manamaster-test-{System.Guid.NewGuid()}.json");
+            controlador.Sesion.UsarRutaDeGuardadoParaTests(_rutaTemporal);
 
             SelectorDeCarta[] selectores = Object.FindObjectsByType<SelectorDeCarta>(
                 FindObjectsSortMode.None);
-            Assert.That(selectores.Length, Is.GreaterThanOrEqualTo(5),
-                "hacen falta al menos 5 cartas distintas para un mazo de 10 con maximo 2 copias");
+            Assert.That(selectores.Length, Is.EqualTo(ConstructorDeMazos.CartasPorMazo),
+                $"hacen falta exactamente {ConstructorDeMazos.CartasPorMazo} cartas " +
+                "distintas en el catalogo para este test (una copia de cada una)");
 
-            // Dos copias de las cinco primeras cartas: diez en total, dentro
-            // del maximo de copias por carta (DESIGN.md §8).
             List<string> elegidas = new();
-            for (int i = 0; i < 5; i++)
+            foreach (SelectorDeCarta selector in selectores)
             {
-                selectores[i].AlPulsarAnadir();
-                selectores[i].AlPulsarAnadir();
-                elegidas.Add(selectores[i].CardId);
-                elegidas.Add(selectores[i].CardId);
+                selector.AlPulsarAnadir();
+                elegidas.Add(selector.CardId);
             }
 
             Assert.That(controlador.PuedeGuardar, Is.True);
@@ -53,13 +77,11 @@ namespace ManaMaster.PlayTests
             yield return CargarEscena("Duelo");
 
             MatchController partida = Object.FindFirstObjectByType<MatchController>();
+            partida.Sesion?.UsarRutaDeGuardadoParaTests(_rutaTemporal);
+
             Assert.That(partida.HayPartida, Is.True);
             Assert.That(partida.Humano.MonstruosRestantes, Is.EqualTo(10));
             Assert.That(TodasLasCartasDelHumano(partida), Is.EquivalentTo(elegidas));
-
-            // No dejar un mazo elegido en el asset compartido: otros tests
-            // (EscenaDeDueloTests) esperan el camino "sin sesion" por defecto.
-            partida.Sesion?.LimpiarMazoHumano();
         }
 
         private static List<string> TodasLasCartasDelHumano(MatchController controlador)

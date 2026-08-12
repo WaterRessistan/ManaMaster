@@ -1,3 +1,4 @@
+using System.IO;
 using ManaMaster.Unity.Cards;
 using ManaMaster.Unity.Deckbuild;
 using ManaMaster.Unity.Sesion;
@@ -14,6 +15,7 @@ namespace ManaMaster.Unity.Tests
         private GameObject _objeto;
         private CardCatalog _catalogo;
         private SesionDeJuego _sesion;
+        private string _rutaTemporal;
 
         [TearDown]
         public void Limpiar()
@@ -39,6 +41,11 @@ namespace ManaMaster.Unity.Tests
             if (_sesion != null)
             {
                 Object.DestroyImmediate(_sesion);
+            }
+
+            if (_rutaTemporal != null && File.Exists(_rutaTemporal))
+            {
+                File.Delete(_rutaTemporal);
             }
         }
 
@@ -171,6 +178,8 @@ namespace ManaMaster.Unity.Tests
         {
             _catalogo = CatalogoDePrueba(monstruosEnCatalogo);
             _sesion = ScriptableObject.CreateInstance<SesionDeJuego>();
+            _rutaTemporal = Path.Combine(Path.GetTempPath(), $"manamaster-test-{System.Guid.NewGuid()}.json");
+            _sesion.UsarRutaDeGuardadoParaTests(_rutaTemporal);
 
             _objeto = new GameObject("ControladorDeckbuild");
             ControladorDeckbuild controlador =

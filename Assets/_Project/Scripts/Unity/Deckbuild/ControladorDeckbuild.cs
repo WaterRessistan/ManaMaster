@@ -27,6 +27,9 @@ namespace ManaMaster.Unity.Deckbuild
         /// <summary>La seleccion ha cambiado y las vistas deben redibujar.</summary>
         public event Action SeleccionCambiada;
 
+        /// <summary>Sesion cableada, o null si no se cableo ninguna.</summary>
+        public SesionDeJuego Sesion => sesion;
+
         public int Total => _elegidas.Count;
 
         public bool PuedeGuardar => Total == ConstructorDeMazos.CartasPorMazo;

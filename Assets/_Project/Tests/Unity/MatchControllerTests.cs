@@ -1,3 +1,4 @@
+using System.IO;
 using System.Linq;
 using ManaMaster.Core.Agents;
 using ManaMaster.Core.Cards;
@@ -28,6 +29,7 @@ namespace ManaMaster.Unity.Tests
 
         private GameObject _objeto;
         private SesionDeJuego _sesion;
+        private string _rutaTemporal;
 
         [TearDown]
         public void Limpiar()
@@ -40,6 +42,11 @@ namespace ManaMaster.Unity.Tests
             if (_sesion != null)
             {
                 Object.DestroyImmediate(_sesion);
+            }
+
+            if (_rutaTemporal != null && File.Exists(_rutaTemporal))
+            {
+                File.Delete(_rutaTemporal);
             }
         }
 
@@ -132,7 +139,7 @@ namespace ManaMaster.Unity.Tests
             Assert.That(seleccion.Length, Is.EqualTo(ConstructorDeMazos.CartasPorMazo),
                 "el catalogo del proyecto necesita al menos 10 monstruos para este test");
 
-            _sesion = ScriptableObject.CreateInstance<SesionDeJuego>();
+            _sesion = NuevaSesionDeTest();
             _sesion.FijarMazoHumano(seleccion);
 
             MatchController controlador = Controlador(semilla: 3, _sesion);
@@ -149,7 +156,7 @@ namespace ManaMaster.Unity.Tests
         [Test]
         public void ConSesionSinMazoElegidoSigueElRepartoAleatorio()
         {
-            _sesion = ScriptableObject.CreateInstance<SesionDeJuego>();
+            _sesion = NuevaSesionDeTest();
 
             MatchController controlador = Controlador(semilla: 4, _sesion);
             controlador.Comenzar();
@@ -193,6 +200,18 @@ namespace ManaMaster.Unity.Tests
             }
 
             return cartas.ToArray();
+        }
+
+        /// <summary>
+        /// Sesion de prueba con el guardado redirigido a un fichero temporal,
+        /// para no tocar el guardado real del desarrollador.
+        /// </summary>
+        private SesionDeJuego NuevaSesionDeTest()
+        {
+            SesionDeJuego sesion = ScriptableObject.CreateInstance<SesionDeJuego>();
+            _rutaTemporal = Path.Combine(Path.GetTempPath(), $"manamaster-test-{System.Guid.NewGuid()}.json");
+            sesion.UsarRutaDeGuardadoParaTests(_rutaTemporal);
+            return sesion;
         }
 
         private MatchController Controlador(int semilla, SesionDeJuego sesion = null)
