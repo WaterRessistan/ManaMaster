@@ -12,3 +12,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ba2f51404e9c300418fa2fd42c00bc9f, type: 3}
   m_Name: SesionDeJuego
   m_EditorClassIdentifier: ManaMaster.Unity::ManaMaster.Unity.Sesion.SesionDeJuego
+  catalogo: {fileID: 11400000, guid: 72d04b0a5c334711a7cca229568944c5, type: 2}
