@@ -31,15 +31,17 @@ namespace ManaMaster.Core.Match
         /// Rondas tras las cuales la partida acaba en tablas (DESIGN.md §9).
         /// </summary>
         /// <remarks>
-        /// Salida de emergencia para el caso raro pero posible de que las dos
-        /// arenas esten llenas y la curacion iguale al dano: entonces no muere
-        /// nadie y sin este tope la partida no acabaria nunca.
-        ///
-        /// El valor esta medido, no elegido a ojo: simulando 2.000 partidas, las
-        /// que se deciden duran entre 11 y 36 rondas, con mediana 18. Hay que
-        /// volver a medirlo en la fase de balanceo con las cartas definitivas.
+        /// No es un desenlace de diseno: las unicas dos formas de perder
+        /// pretendidas son quedarse sin monstruos y quedarse ahogado. Esto es
+        /// solo una valvula de seguridad tecnica para el caso extremo, raro
+        /// pero posible, de que las dos arenas esten llenas y la curacion
+        /// iguale al dano turno tras turno: entonces no muere nadie y sin
+        /// este tope la partida no acabaria nunca. El valor es
+        /// deliberadamente muy alto (partidas normales se deciden en unas
+        /// pocas decenas de rondas) para que el jugador no lo vea nunca en la
+        /// practica.
         /// </remarks>
-        public const int MaxRondas = 60;
+        public const int MaxRondas = 300;
 
         /// <summary>
         /// Monta la partida y sortea quien empieza (DESIGN.md §5).
