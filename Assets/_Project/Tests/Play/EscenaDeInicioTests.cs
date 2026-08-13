@@ -28,7 +28,8 @@ namespace ManaMaster.PlayTests
                 .Select(boton => boton.NombreEscena)
                 .ToList();
 
-            Assert.That(destinos, Is.EquivalentTo(new[] { "Duelo", "Tienda", "Deckbuild" }));
+            Assert.That(destinos, Is.EquivalentTo(
+                new[] { "Duelo", "Tienda", "Deckbuild", "Coleccion" }));
         }
 
         [UnityTest]

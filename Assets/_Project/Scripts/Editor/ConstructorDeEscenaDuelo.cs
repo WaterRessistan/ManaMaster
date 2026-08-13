@@ -73,6 +73,8 @@ namespace ManaMaster.Herramientas
 
             CablearControlador(controlador, arenaJugador, arenaRival, marcador);
 
+            ConstructorDeEscenaComun.Transicion(lienzo);
+
             System.IO.Directory.CreateDirectory(
                 System.IO.Path.GetDirectoryName(RutaEscena));
 
@@ -276,7 +278,8 @@ namespace ManaMaster.Herramientas
                 fondo.gameObject.AddComponent<CanvasGroup>();
                 CartaDeObjeto carta = fondo.gameObject.AddComponent<CartaDeObjeto>();
 
-                VistaCartaObjeto vistaObjeto = CartaObjetoDibujada(fondo.transform);
+                VistaCartaObjeto vistaObjeto = ConstructorDeCartas.Objeto(
+                    "Contenido", fondo.transform, Vector2.zero, conFondo: false);
 
                 ConstructorDeInterfaz.Cablear(carta,
                     ("controlador", controlador),
@@ -389,36 +392,5 @@ namespace ManaMaster.Herramientas
                 ("reproductor", reproductor));
         }
 
-        /// <summary>Contenido de una carta de objeto: arte y los tres bonus.</summary>
-        private static VistaCartaObjeto CartaObjetoDibujada(Transform padre)
-        {
-            RectTransform raiz = ConstructorDeInterfaz.Nodo(
-                "Contenido", padre, Vector2.zero, TamanoCartaObjeto);
-
-            VistaCartaObjeto vista = raiz.gameObject.AddComponent<VistaCartaObjeto>();
-
-            Image arte = ConstructorDeInterfaz.Panel("Arte", raiz,
-                new Vector2(0f, 24f), new Vector2(80f, 56f), Color.white,
-                recibeClics: false);
-            arte.preserveAspect = true;
-
-            Text nombreObjeto = ConstructorDeInterfaz.Texto("Nombre", raiz,
-                new Vector2(0f, 58f), new Vector2(96f, 22f), "", 12);
-            Text bonusAtaque = ConstructorDeInterfaz.Texto("BonusAtaque", raiz,
-                new Vector2(-28f, -50f), new Vector2(28f, 20f), "", 14);
-            Text bonusVida = ConstructorDeInterfaz.Texto("BonusVida", raiz,
-                new Vector2(0f, -50f), new Vector2(28f, 20f), "", 14);
-            Text bonusCura = ConstructorDeInterfaz.Texto("BonusCura", raiz,
-                new Vector2(28f, -50f), new Vector2(28f, 20f), "", 14);
-
-            ConstructorDeInterfaz.Cablear(vista,
-                ("nombre", nombreObjeto),
-                ("bonusAtaque", bonusAtaque),
-                ("bonusVida", bonusVida),
-                ("bonusCura", bonusCura),
-                ("arte", arte));
-
-            return vista;
-        }
     }
 }

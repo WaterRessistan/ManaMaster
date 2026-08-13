@@ -26,7 +26,6 @@ namespace ManaMaster.Herramientas
 
         private static readonly Color ColorDeFondo = new(0.07f, 0.08f, 0.12f, 1f);
         private static readonly Vector2 TamanoSelector = new(150f, 250f);
-        private static readonly Vector2 TamanoCartaObjeto = new(100f, 140f);
         private static readonly Vector2 TamanoSelectorDeObjeto = new(120f, 210f);
 
         private const int Columnas = 5;
@@ -93,6 +92,7 @@ namespace ManaMaster.Herramientas
             }
 
             Pie(lienzo.transform, controlador);
+            ConstructorDeEscenaComun.Transicion(lienzo);
 
             System.IO.Directory.CreateDirectory(
                 System.IO.Path.GetDirectoryName(RutaEscena));
@@ -157,7 +157,8 @@ namespace ManaMaster.Herramientas
 
             SelectorDeObjeto selector = raiz.gameObject.AddComponent<SelectorDeObjeto>();
 
-            VistaCartaObjeto carta = CartaObjeto(raiz.transform, new Vector2(0f, 25f));
+            VistaCartaObjeto carta = ConstructorDeCartas.Objeto(
+                "Carta", raiz.transform, new Vector2(0f, 25f));
 
             Text copias = ConstructorDeInterfaz.Texto("Copias", raiz,
                 new Vector2(0f, -70f), new Vector2(110f, 26f), "0/2", 16);
@@ -174,39 +175,6 @@ namespace ManaMaster.Herramientas
                 ("copias", copias),
                 ("anadir", anadir),
                 ("quitar", quitar));
-        }
-
-        /// <summary>Objeto dibujado: fondo, arte y los tres bonus.</summary>
-        private static VistaCartaObjeto CartaObjeto(Transform padre, Vector2 posicion)
-        {
-            RectTransform raiz = ConstructorDeInterfaz.Panel("Carta", padre, posicion,
-                    TamanoCartaObjeto, new Color(0.15f, 0.17f, 0.24f, 1f), recibeClics: false)
-                .rectTransform;
-
-            VistaCartaObjeto vista = raiz.gameObject.AddComponent<VistaCartaObjeto>();
-
-            Image arte = ConstructorDeInterfaz.Panel("Arte", raiz,
-                new Vector2(0f, 24f), new Vector2(80f, 56f), Color.white,
-                recibeClics: false);
-            arte.preserveAspect = true;
-
-            Text nombreObjeto = ConstructorDeInterfaz.Texto("Nombre", raiz,
-                new Vector2(0f, 58f), new Vector2(96f, 22f), "", 12);
-            Text bonusAtaque = ConstructorDeInterfaz.Texto("BonusAtaque", raiz,
-                new Vector2(-28f, -50f), new Vector2(28f, 20f), "", 14);
-            Text bonusVida = ConstructorDeInterfaz.Texto("BonusVida", raiz,
-                new Vector2(0f, -50f), new Vector2(28f, 20f), "", 14);
-            Text bonusCura = ConstructorDeInterfaz.Texto("BonusCura", raiz,
-                new Vector2(28f, -50f), new Vector2(28f, 20f), "", 14);
-
-            ConstructorDeInterfaz.Cablear(vista,
-                ("nombre", nombreObjeto),
-                ("bonusAtaque", bonusAtaque),
-                ("bonusVida", bonusVida),
-                ("bonusCura", bonusCura),
-                ("arte", arte));
-
-            return vista;
         }
 
         private static void Pie(Transform padre, ControladorDeckbuild controlador)

@@ -40,11 +40,13 @@ namespace ManaMaster.Herramientas
             // (ConstructorDeEscenaTienda.RutaEscena, ...Deckbuild...): en
             // literal porque Inicio se genera antes de que esas clases existan
             // en el orden de trabajo de la Fase 5.
-            NavegacionA("BotonJugar", lienzo.transform, new Vector2(0f, 120f), "Jugar", "Duelo");
-            NavegacionA("BotonTienda", lienzo.transform, new Vector2(0f, 20f), "Tienda", "Tienda");
-            NavegacionA("BotonMazos", lienzo.transform, new Vector2(0f, -80f), "Mazos", "Deckbuild");
+            NavegacionA("BotonJugar", lienzo.transform, new Vector2(0f, 150f), "Jugar", "Duelo");
+            NavegacionA("BotonTienda", lienzo.transform, new Vector2(0f, 50f), "Tienda", "Tienda");
+            NavegacionA("BotonMazos", lienzo.transform, new Vector2(0f, -50f), "Mazos", "Deckbuild");
+            NavegacionA("BotonColeccion", lienzo.transform, new Vector2(0f, -150f), "Colección", "Coleccion");
 
             Opciones(lienzo.transform);
+            ConstructorDeEscenaComun.Transicion(lienzo);
 
             System.IO.Directory.CreateDirectory(
                 System.IO.Path.GetDirectoryName(RutaEscena));
@@ -101,7 +103,7 @@ namespace ManaMaster.Herramientas
                 cerrar.onClick, alternar.Alternar);
 
             Button abrir = ConstructorDeInterfaz.Boton("BotonOpciones", padre,
-                new Vector2(0f, -180f), TamanoBoton, "Opciones", out _);
+                new Vector2(0f, -260f), TamanoBoton, "Opciones", out _);
             UnityEditor.Events.UnityEventTools.AddPersistentListener(
                 abrir.onClick, alternar.Alternar);
         }

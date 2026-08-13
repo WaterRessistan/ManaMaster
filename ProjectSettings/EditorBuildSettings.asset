@@ -15,6 +15,9 @@ EditorBuildSettings:
     path: Assets/_Project/Scenes/Deckbuild.unity
     guid: 2fae25ecc4bda7a4bbd06a83b0b3f995
   - enabled: 1
+    path: Assets/_Project/Scenes/Coleccion.unity
+    guid: 8ed578f82dea4a641b9e2976bafdafcf
+  - enabled: 1
     path: Assets/_Project/Scenes/Duelo.unity
     guid: 8fb329a41397e974a8e70363f42d5446
   m_configObjects:

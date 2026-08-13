@@ -4,7 +4,7 @@ using UnityEngine;
 namespace ManaMaster.Herramientas
 {
     /// <summary>
-    /// Reconstruye las 4 escenas del flujo en orden, de una vez.
+    /// Reconstruye las 5 escenas del flujo en orden, de una vez.
     /// </summary>
     /// <remarks>
     /// Cada escena se genera desde cero por su cuenta; esto es solo la forma
@@ -20,9 +20,10 @@ namespace ManaMaster.Herramientas
             ConstructorDeEscenaInicio.Reconstruir();
             ConstructorDeEscenaTienda.Reconstruir();
             ConstructorDeEscenaDeckbuild.Reconstruir();
+            ConstructorDeEscenaColeccion.Reconstruir();
             ConstructorDeEscenaDuelo.Reconstruir();
 
-            Debug.Log("[ConstructorDeTodasLasEscenas] Las 4 escenas se han regenerado.");
+            Debug.Log("[ConstructorDeTodasLasEscenas] Las 5 escenas se han regenerado.");
         }
     }
 }

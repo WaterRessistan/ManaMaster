@@ -27,23 +27,30 @@ namespace ManaMaster.Herramientas
         private const string RutaArteSobre = "Assets/_Project/Content/Art/Sobre.png";
 
         private static readonly Color ColorDeFondo = new(0.07f, 0.08f, 0.12f, 1f);
-        private static readonly Vector2 TamanoCartaObjeto = new(100f, 140f);
         private static readonly Vector2 TamanoOfertaSobre = new(220f, 220f);
 
-        private const float SeparacionX = 170f;
-        private const float SeparacionY = 280f;
+        // Las cartas de la Tienda se dibujan a menor escala que en Duelo o
+        // Deckbuild (ConstructorDeCartas usa siempre 130x180 / 100x140 por
+        // dentro): con 13 monstruos y 7 objetos no cabria una sola fila, asi
+        // que se encogen para poder ensenar dos filas de monstruos sin
+        // desbordar el lienzo de 1920x1080.
+        private const float EscalaCartaMonstruo = 0.78f;
+        private const float EscalaCartaObjeto = 0.8f;
+
+        private const int ColumnasMonstruos = 7;
+        private const float SeparacionX = 145f;
+        private const float SeparacionY = 235f;
         private const float SeparacionXObjetos = 190f;
 
-        // De arriba a abajo: sobre, titulo, fila de monstruos, titulo,
-        // fila de objetos. Con el roster de hoy (9 monstruos, 5 objetos) cae
-        // en una sola fila de cada, asi que caben los cinco bloques dentro
-        // del lienzo de 1920x1080. Si el roster crece bastante en la Fase 6,
-        // esto puede necesitar mas columnas o un reajuste de estas alturas.
-        private const float AlturaSobre = 300f;
-        private const float AlturaTituloCartas = 170f;
-        private const float AlturaFilaMonstruos = 0f;
-        private const float AlturaTituloObjetos = -170f;
-        private const float AlturaFilaObjetos = -305f;
+        // De arriba a abajo: sobre, titulo, filas de monstruos, titulo, fila
+        // de objetos. Es una aproximacion sin verificacion visual, igual que
+        // el resto de la interfaz de esta sesion: si algo queda apretado o
+        // se sale del lienzo, se ajusta al verlo en el editor.
+        private const float AlturaSobre = 290f;
+        private const float AlturaTituloCartas = 160f;
+        private const float AlturaFilaMonstruos = 10f;
+        private const float AlturaTituloObjetos = -370f;
+        private const float AlturaFilaObjetos = -470f;
 
         [MenuItem("Mana Master/Reconstruir escena de tienda")]
         public static void Reconstruir()
@@ -77,8 +84,6 @@ namespace ManaMaster.Herramientas
 
             if (catalogo != null)
             {
-                int columnas = Mathf.Max(catalogo.Monsters.Count, 1);
-
                 for (int i = 0; i < catalogo.Monsters.Count; i++)
                 {
                     MonsterCardDefinition definicion = catalogo.Monsters[i];
@@ -87,10 +92,13 @@ namespace ManaMaster.Herramientas
                         continue;
                     }
 
-                    float x = (i - (columnas - 1) * 0.5f) * SeparacionX;
+                    int columna = i % ColumnasMonstruos;
+                    int fila = i / ColumnasMonstruos;
 
-                    OfertaDeMonstruo(lienzo.transform,
-                        new Vector2(x, AlturaFilaMonstruos), sesion, definicion);
+                    float x = (columna - (ColumnasMonstruos - 1) * 0.5f) * SeparacionX;
+                    float y = AlturaFilaMonstruos - fila * SeparacionY;
+
+                    OfertaDeMonstruo(lienzo.transform, new Vector2(x, y), sesion, definicion);
                 }
             }
 
@@ -115,6 +123,7 @@ namespace ManaMaster.Herramientas
             }
 
             Volver(lienzo.transform);
+            ConstructorDeEscenaComun.Transicion(lienzo);
 
             System.IO.Directory.CreateDirectory(
                 System.IO.Path.GetDirectoryName(RutaEscena));
@@ -135,10 +144,11 @@ namespace ManaMaster.Herramientas
             Transform padre, Vector2 posicion, SesionDeJuego sesion, MonsterCardDefinition definicion)
         {
             RectTransform contenedor = ConstructorDeInterfaz.Nodo(
-                $"Oferta_{definicion.name}", padre, posicion, new Vector2(150f, 300f));
+                $"Oferta_{definicion.name}", padre, posicion, new Vector2(150f, 235f));
 
             VistaCartaMonstruo carta = ConstructorDeCartas.Monstruo(
                 "Carta", contenedor, new Vector2(0f, 35f));
+            carta.transform.localScale = Vector3.one * EscalaCartaMonstruo;
             // Horneado en el editor: esta pantalla no tiene ninguna partida
             // en curso de la que sacar una CardInstance real, asi que se crea
             // una desechable solo para pintar la plantilla (mismo truco que
@@ -146,10 +156,10 @@ namespace ManaMaster.Herramientas
             carta.Mostrar(new CardInstance(definicion));
 
             Text precioTexto = ConstructorDeInterfaz.Texto("Precio", contenedor,
-                new Vector2(0f, -85f), new Vector2(140f, 30f), "", 20);
+                new Vector2(0f, -60f), new Vector2(140f, 28f), "", 18);
 
             Button comprar = ConstructorDeInterfaz.Boton("BotonComprar", contenedor,
-                new Vector2(0f, -125f), new Vector2(140f, 50f), "Comprar", out _);
+                new Vector2(0f, -96f), new Vector2(130f, 42f), "Comprar", out _);
 
             VistaOfertaTienda vista = contenedor.gameObject.AddComponent<VistaOfertaTienda>();
             ConstructorDeInterfaz.Cablear(vista,
@@ -170,16 +180,18 @@ namespace ManaMaster.Herramientas
             Transform padre, Vector2 posicion, SesionDeJuego sesion, ItemCardDefinition definicion)
         {
             RectTransform contenedor = ConstructorDeInterfaz.Nodo(
-                $"Oferta_{definicion.name}", padre, posicion, new Vector2(130f, 230f));
+                $"Oferta_{definicion.name}", padre, posicion, new Vector2(130f, 190f));
 
-            VistaCartaObjeto carta = CartaObjetoDibujada(contenedor, new Vector2(0f, 25f));
+            VistaCartaObjeto carta = ConstructorDeCartas.Objeto(
+                "Carta", contenedor, new Vector2(0f, 25f));
+            carta.transform.localScale = Vector3.one * EscalaCartaObjeto;
             carta.Mostrar(definicion);
 
             Text precioTexto = ConstructorDeInterfaz.Texto("Precio", contenedor,
-                new Vector2(0f, -70f), new Vector2(110f, 26f), "", 16);
+                new Vector2(0f, -48f), new Vector2(110f, 24f), "", 15);
 
             Button comprar = ConstructorDeInterfaz.Boton("BotonComprar", contenedor,
-                new Vector2(0f, -100f), new Vector2(100f, 40f), "Comprar", out _);
+                new Vector2(0f, -80f), new Vector2(95f, 36f), "Comprar", out _);
 
             VistaOfertaTienda vista = contenedor.gameObject.AddComponent<VistaOfertaTienda>();
             ConstructorDeInterfaz.Cablear(vista,
@@ -189,39 +201,6 @@ namespace ManaMaster.Herramientas
                 ("carta", definicion));
 
             vista.Mostrar(definicion.DisplayName);
-
-            return vista;
-        }
-
-        /// <summary>Contenido de una carta de objeto: arte y los tres bonus.</summary>
-        private static VistaCartaObjeto CartaObjetoDibujada(Transform padre, Vector2 posicion)
-        {
-            RectTransform raiz = ConstructorDeInterfaz.Panel("Carta", padre, posicion,
-                    TamanoCartaObjeto, new Color(0.15f, 0.17f, 0.24f, 1f), recibeClics: false)
-                .rectTransform;
-
-            VistaCartaObjeto vista = raiz.gameObject.AddComponent<VistaCartaObjeto>();
-
-            Image arte = ConstructorDeInterfaz.Panel("Arte", raiz,
-                new Vector2(0f, 24f), new Vector2(80f, 56f), Color.white,
-                recibeClics: false);
-            arte.preserveAspect = true;
-
-            Text nombreObjeto = ConstructorDeInterfaz.Texto("Nombre", raiz,
-                new Vector2(0f, 58f), new Vector2(96f, 22f), "", 12);
-            Text bonusAtaque = ConstructorDeInterfaz.Texto("BonusAtaque", raiz,
-                new Vector2(-28f, -50f), new Vector2(28f, 20f), "", 14);
-            Text bonusVida = ConstructorDeInterfaz.Texto("BonusVida", raiz,
-                new Vector2(0f, -50f), new Vector2(28f, 20f), "", 14);
-            Text bonusCura = ConstructorDeInterfaz.Texto("BonusCura", raiz,
-                new Vector2(28f, -50f), new Vector2(28f, 20f), "", 14);
-
-            ConstructorDeInterfaz.Cablear(vista,
-                ("nombre", nombreObjeto),
-                ("bonusAtaque", bonusAtaque),
-                ("bonusVida", bonusVida),
-                ("bonusCura", bonusCura),
-                ("arte", arte));
 
             return vista;
         }
