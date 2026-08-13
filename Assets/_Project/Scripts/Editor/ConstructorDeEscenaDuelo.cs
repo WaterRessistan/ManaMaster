@@ -30,21 +30,23 @@ namespace ManaMaster.Herramientas
     public static class ConstructorDeEscenaDuelo
     {
         public const string RutaEscena = "Assets/_Project/Scenes/Duelo.unity";
+        private const string RutaTablero = "Assets/_Project/Content/Art/Tablero.png";
 
         private static readonly Color ColorDeFondo = new(0.07f, 0.08f, 0.12f, 1f);
 
         private static readonly Vector2 TamanoCarta = new(130f, 180f);
         private static readonly Vector2 TamanoCarril = new(150f, 200f);
         private static readonly Vector2 TamanoCartaObjeto = new(100f, 140f);
+        private static readonly Vector2 TamanoTablero = new(1600f, 900f);
 
-        // Alturas de cada fila del tablero, de arriba abajo.
-        private const float AlturaTraserosRival = 385f;
-        private const float AlturaPrincipalRival = 200f;
-        private const float AlturaPrincipalJugador = -95f;
-        private const float AlturaTraserosJugador = -280f;
+        // Una sola fila por jugador (el tablero original de Tablero.png), no
+        // una altura para el principal y otra para los traseros. Medido sobre
+        // la imagen: ver Contexto del plan de este cambio.
+        private const float AlturaFilaRival = 288f;
+        private const float AlturaFilaJugador = -286f;
         private const float AlturaMano = -450f;
 
-        private const float SeparacionCarriles = 175f;
+        private const float SeparacionCarriles = 299f;
 
         [MenuItem("Mana Master/Reconstruir escena de duelo")]
         public static void Reconstruir()
@@ -86,12 +88,30 @@ namespace ManaMaster.Herramientas
         {
             Canvas lienzo = ConstructorDeEscenaComun.Lienzo();
 
+            Tablero(lienzo.transform);
+
             // Linea divisoria entre los dos bandos.
             ConstructorDeInterfaz.Panel("LineaCentral", lienzo.transform,
                 new Vector2(0f, 55f), new Vector2(1400f, 4f),
                 new Color(1f, 1f, 1f, 0.15f), recibeClics: false);
 
             return lienzo;
+        }
+
+        /// <summary>
+        /// Fondo con la imagen del tablero, detras de los carriles. Su tamano
+        /// y posicion son los mismos que se usaron para medir
+        /// <see cref="AlturaFilaRival"/>, <see cref="AlturaFilaJugador"/> y
+        /// <see cref="SeparacionCarriles"/>, asi que los carriles caen
+        /// encima de sus huecos en la imagen.
+        /// </summary>
+        private static void Tablero(Transform padre)
+        {
+            Image fondo = ConstructorDeInterfaz.Panel(
+                "Tablero", padre, Vector2.zero, TamanoTablero,
+                Color.white, recibeClics: false);
+            fondo.sprite = AssetDatabase.LoadAssetAtPath<Sprite>(RutaTablero);
+            fondo.preserveAspect = true;
         }
 
         private static MatchController Partida()
@@ -163,20 +183,19 @@ namespace ManaMaster.Herramientas
         }
 
         /// <summary>
-        /// Coloca cada carril segun el tablero del §2. Los traseros van cruzados
-        /// entre bandos: el 2 del jugador queda enfrente del 3 del rival, que es
-        /// justo a quien ataca.
+        /// Coloca cada carril segun el tablero del §2: una sola fila por
+        /// jugador, con el principal centrado entre los dos traseros. Los
+        /// traseros van cruzados entre bandos: el 2 del jugador queda enfrente
+        /// del 3 del rival, que es justo a quien ataca.
         /// </summary>
         private static Vector2 PosicionDeCarril(int carril, bool esDelRival)
         {
+            float altura = esDelRival ? AlturaFilaRival : AlturaFilaJugador;
+
             if (carril == BoardLanes.Principal)
             {
-                return new Vector2(
-                    0f,
-                    esDelRival ? AlturaPrincipalRival : AlturaPrincipalJugador);
+                return new Vector2(0f, altura);
             }
-
-            float altura = esDelRival ? AlturaTraserosRival : AlturaTraserosJugador;
 
             // Carril 2 a la derecha del rival y a la izquierda del jugador.
             float lado = carril == BoardLanes.PrimerTrasero ? 1f : -1f;

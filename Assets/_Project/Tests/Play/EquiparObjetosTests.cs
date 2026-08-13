@@ -69,7 +69,16 @@ namespace ManaMaster.PlayTests
                 carril++;
             }
 
-            ResultadoEquipar resultado = controlador.EquiparObjeto(0, carril);
+            // Las pociones (DESIGN.md §4) nunca ocupan el hueco de objeto ni
+            // bloquean nada, asi que para probar el bloqueo hace falta un
+            // objeto normal concreto, no el primer hueco de la mano.
+            int hueco = HuecoDeObjetoNormal(controlador);
+            if (hueco < 0)
+            {
+                Assert.Pass("la mano no tenia ningun objeto normal en esta semilla; nada que probar");
+            }
+
+            ResultadoEquipar resultado = controlador.EquiparObjeto(hueco, carril);
 
             Assert.That(resultado, Is.EqualTo(ResultadoEquipar.Ok));
             Assert.That(controlador.Humano.Arena[carril].EquippedItem, Is.Not.Null);
@@ -81,9 +90,30 @@ namespace ManaMaster.PlayTests
             Assert.That(vista.MuestraIconoDeObjeto, Is.True,
                 "el badge de objeto equipado deberia estar encendido");
 
-            // DESIGN.md §4: como mucho un objeto, no se puede sustituir.
-            ResultadoEquipar segundoIntento = controlador.EquiparObjeto(0, carril);
+            // DESIGN.md §4: como mucho un objeto normal, no se puede sustituir.
+            int segundoHueco = HuecoDeObjetoNormal(controlador);
+            if (segundoHueco < 0)
+            {
+                Assert.Pass("no quedaba ningun objeto normal para probar el bloqueo; nada que probar");
+            }
+
+            ResultadoEquipar segundoIntento = controlador.EquiparObjeto(segundoHueco, carril);
             Assert.That(segundoIntento, Is.EqualTo(ResultadoEquipar.YaLlevaObjeto));
+        }
+
+        /// <summary>Primer hueco de la mano con un objeto que no sea pocion, o -1 si no hay.</summary>
+        private static int HuecoDeObjetoNormal(MatchController controlador)
+        {
+            for (int hueco = 0; hueco < ItemHand.Capacity; hueco++)
+            {
+                var objeto = controlador.Humano.ManoDeObjetos[hueco];
+                if (objeto != null && !objeto.EsPocion)
+                {
+                    return hueco;
+                }
+            }
+
+            return -1;
         }
 
         private static bool DesplegarAlguno(MatchController controlador)
