@@ -1,3 +1,4 @@
+using System.Collections;
 using ManaMaster.Core.Match;
 using UnityEngine;
 using UnityEngine.UI;
@@ -23,6 +24,17 @@ namespace ManaMaster.Unity.Duelo
         [Tooltip("Se apaga cuando no es el turno del jugador.")]
         [SerializeField] private Button terminarTurno;
 
+        // Dorado cuando es tu turno, rojo apagado cuando es el del rival: asi
+        // se ve de un vistazo sin tener que leer el texto.
+        private static readonly Color ColorTuTurno = new(1f, 0.82f, 0.2f, 1f);
+        private static readonly Color ColorTurnoRival = new(0.78f, 0.28f, 0.28f, 1f);
+        private static readonly Color ColorNeutro = Color.white;
+
+        private const float VelocidadDePulso = 3f;
+        private const float AmplitudDePulso = 0.08f;
+
+        private Coroutine _pulso;
+
         private void OnEnable()
         {
             if (controlador != null)
@@ -31,6 +43,8 @@ namespace ManaMaster.Unity.Duelo
             }
 
             Refrescar();
+
+            _pulso ??= StartCoroutine(PulsarTextoDeTurno());
         }
 
         private void OnDisable()
@@ -38,6 +52,12 @@ namespace ManaMaster.Unity.Duelo
             if (controlador != null)
             {
                 controlador.PartidaCambiada -= Refrescar;
+            }
+
+            if (_pulso != null)
+            {
+                StopCoroutine(_pulso);
+                _pulso = null;
             }
         }
 
@@ -55,6 +75,11 @@ namespace ManaMaster.Unity.Duelo
             Escribir(ronda, $"Ronda: {partida.Ronda}");
             Escribir(turno, TextoDeTurno(partida));
 
+            if (turno != null)
+            {
+                turno.color = ColorDeTurno(partida);
+            }
+
             if (terminarTurno != null)
             {
                 terminarTurno.interactable = controlador.EsTurnoDelHumano;
@@ -71,6 +96,35 @@ namespace ManaMaster.Unity.Duelo
                 ? "Has ganado"
                 : "Has perdido"
         };
+
+        private Color ColorDeTurno(MatchState partida)
+            => partida.Resultado != ResultadoPartida.EnCurso
+                ? ColorNeutro
+                : controlador.EsTurnoDelHumano ? ColorTuTurno : ColorTurnoRival;
+
+        /// <summary>
+        /// Pulso continuo de escala mientras la partida esta en curso, para
+        /// que el turno se note sin tener que leer el texto. Se para solo
+        /// (vuelve a escala 1) cuando la partida termina.
+        /// </summary>
+        private IEnumerator PulsarTextoDeTurno()
+        {
+            while (true)
+            {
+                bool enCurso = controlador != null && controlador.HayPartida
+                    && controlador.Partida.Resultado == ResultadoPartida.EnCurso;
+
+                if (turno != null)
+                {
+                    float escala = enCurso
+                        ? 1f + AmplitudDePulso * Mathf.Sin(Time.unscaledTime * VelocidadDePulso)
+                        : 1f;
+                    turno.rectTransform.localScale = new Vector3(escala, escala, 1f);
+                }
+
+                yield return null;
+            }
+        }
 
         private static void Escribir(Text campo, string valor)
         {
