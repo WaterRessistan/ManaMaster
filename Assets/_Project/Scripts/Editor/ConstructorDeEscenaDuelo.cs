@@ -431,6 +431,9 @@ namespace ManaMaster.Herramientas
                 new Vector2(0f, 18f), new Vector2(120f, 40f), "", 26);
             textoFlotante.gameObject.SetActive(false);
 
+            RectTransform iconoMelee = IconoDeEspada(raiz);
+            RectTransform iconoRango = IconoDeFlecha(raiz);
+
             ConstructorDeInterfaz.Cablear(vista,
                 ("nombre", nombreCarta),
                 ("ataque", ataque),
@@ -439,9 +442,71 @@ namespace ManaMaster.Herramientas
                 ("vida", vida),
                 ("arte", arte),
                 ("iconoObjeto", iconoObjeto),
-                ("textoFlotante", textoFlotante));
+                ("textoFlotante", textoFlotante),
+                ("iconoMelee", iconoMelee.gameObject),
+                ("iconoRango", iconoRango.gameObject));
 
             return vista;
+        }
+
+        /// <summary>
+        /// Icono de espada (melee): hoja, guarda y mango, sin arte porque no
+        /// hay herramientas de imagen en este entorno. Es un dibujo hecho de
+        /// paneles UI, como el resto de la escena. Empieza apagado; lo
+        /// enciende <see cref="VistaCartaMonstruo.Refrescar"/> segun
+        /// <c>CanAttackMelee</c>.
+        /// </summary>
+        private static RectTransform IconoDeEspada(Transform padre)
+        {
+            RectTransform raiz = ConstructorDeInterfaz.Nodo(
+                "IconoMelee", padre, new Vector2(-50f, 84f), new Vector2(22f, 22f));
+
+            ConstructorDeInterfaz.Panel("Hoja", raiz,
+                new Vector2(0f, 3f), new Vector2(3f, 14f),
+                new Color(0.85f, 0.87f, 0.92f, 1f), recibeClics: false);
+            ConstructorDeInterfaz.Panel("Guarda", raiz,
+                new Vector2(0f, -4f), new Vector2(10f, 2.5f),
+                new Color(0.55f, 0.45f, 0.15f, 1f), recibeClics: false);
+            ConstructorDeInterfaz.Panel("Mango", raiz,
+                new Vector2(0f, -8f), new Vector2(3f, 5f),
+                new Color(0.35f, 0.22f, 0.12f, 1f), recibeClics: false);
+
+            // Se construye derecha y se rota entera: mas facil de calcular
+            // que rotar cada pieza a su propio angulo.
+            raiz.localRotation = Quaternion.Euler(0f, 0f, -40f);
+            raiz.gameObject.SetActive(false);
+
+            return raiz;
+        }
+
+        /// <summary>
+        /// Icono de flecha (rango): asta y punta, en vez de un arco curvo
+        /// que no se puede dibujar bien solo con rectangulos. Empieza
+        /// apagado; lo enciende <see cref="VistaCartaMonstruo.Refrescar"/>
+        /// segun <c>CanAttackRanged</c>.
+        /// </summary>
+        private static RectTransform IconoDeFlecha(Transform padre)
+        {
+            RectTransform raiz = ConstructorDeInterfaz.Nodo(
+                "IconoRango", padre, new Vector2(-50f, 60f), new Vector2(22f, 22f));
+
+            ConstructorDeInterfaz.Panel("Asta", raiz,
+                new Vector2(-2f, 0f), new Vector2(14f, 2.5f),
+                new Color(0.5f, 0.35f, 0.2f, 1f), recibeClics: false);
+
+            Image puntaArriba = ConstructorDeInterfaz.Panel("PuntaArriba", raiz,
+                new Vector2(6f, 1.5f), new Vector2(6f, 2f),
+                new Color(0.8f, 0.8f, 0.82f, 1f), recibeClics: false);
+            puntaArriba.rectTransform.localRotation = Quaternion.Euler(0f, 0f, 35f);
+
+            Image puntaAbajo = ConstructorDeInterfaz.Panel("PuntaAbajo", raiz,
+                new Vector2(6f, -1.5f), new Vector2(6f, 2f),
+                new Color(0.8f, 0.8f, 0.82f, 1f), recibeClics: false);
+            puntaAbajo.rectTransform.localRotation = Quaternion.Euler(0f, 0f, -35f);
+
+            raiz.gameObject.SetActive(false);
+
+            return raiz;
         }
 
         /// <summary>Contenido de una carta de objeto: arte y los tres bonus.</summary>

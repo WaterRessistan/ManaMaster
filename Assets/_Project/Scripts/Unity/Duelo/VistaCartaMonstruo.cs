@@ -33,17 +33,29 @@ namespace ManaMaster.Unity.Duelo
         [Tooltip("Numero flotante que sube y se desvanece con cada golpe o curacion. Oculto hasta que se usa.")]
         [SerializeField] private Text textoFlotante;
 
+        [Header("Tipo de ataque")]
+        [Tooltip("Espada: se enciende si el monstruo puede atacar cuerpo a cuerpo.")]
+        [SerializeField] private GameObject iconoMelee;
+        [Tooltip("Flecha: se enciende si el monstruo puede atacar a distancia.")]
+        [SerializeField] private GameObject iconoRango;
+
         // "Juice" de combate (DESIGN.md: sin regla propia, es solo feedback
-        // visual): golpe de escala + numero flotante sobre la carta afectada.
-        private const float DuracionDeImpacto = 0.35f;
+        // visual): golpe de escala + numero flotante sobre la carta afectada,
+        // y embestida del atacante contra el objetivo. Duracion compartida
+        // por las tres para que atacante y objetivo queden sincronizados.
+        private const float DuracionDeGolpe = 0.4375f; // 0.35s base, 25% mas lento a peticion del usuario
         private const float EscalaMaximaDeImpacto = 1.18f;
         private const float DistanciaFlotante = 40f;
+        private const float FraccionDeEmbestida = 0.18f;
+        private const float DistanciaMaximaDeEmbestida = 45f;
 
         private static readonly Color ColorDeCuracion = new(0.35f, 0.9f, 0.4f, 1f);
         private static readonly Color ColorDeDano = new(0.95f, 0.3f, 0.3f, 1f);
 
         private Vector2 _posicionInicialFlotante;
+        private Vector2 _posicionAnchoredOriginal;
         private Coroutine _animacionDeImpacto;
+        private Coroutine _animacionDeEmbestida;
 
         /// <summary>
         /// Vida a mostrar en lugar de la actual, o null para usar la real.
@@ -61,6 +73,8 @@ namespace ManaMaster.Unity.Duelo
             {
                 _posicionInicialFlotante = textoFlotante.rectTransform.anchoredPosition;
             }
+
+            _posicionAnchoredOriginal = ((RectTransform)transform).anchoredPosition;
         }
 
         /// <summary>Carta representada, o null si el hueco esta vacio.</summary>
@@ -99,11 +113,14 @@ namespace ManaMaster.Unity.Duelo
             Carta = null;
             _vidaForzada = null;
 
-            // Desactivar el GameObject para una corrutina de impacto en marcha
-            // (Unity la corta sola), pero sin resetear la escala se quedaria
-            // a medio golpe la proxima vez que se muestre esta carta.
+            // Desactivar el GameObject corta sola cualquier corrutina de
+            // impacto o embestida en marcha (Unity lo hace al desactivar),
+            // pero sin resetear escala y posicion se quedaria a medio golpe
+            // la proxima vez que se muestre esta carta.
             _animacionDeImpacto = null;
+            _animacionDeEmbestida = null;
             transform.localScale = Vector3.one;
+            ((RectTransform)transform).anchoredPosition = _posicionAnchoredOriginal;
             if (textoFlotante != null)
             {
                 textoFlotante.gameObject.SetActive(false);
@@ -139,6 +156,20 @@ namespace ManaMaster.Unity.Duelo
                 Sprite iconoDelObjeto = (Carta.EquippedItem as CardDefinition)?.Artwork;
                 iconoObjeto.sprite = iconoDelObjeto;
                 iconoObjeto.enabled = Carta.EquippedItem != null;
+            }
+
+            // Chequeo explicito, no "?.": un GameObject sin cablear en el
+            // Inspector no es null de verdad (es la referencia "perdida" de
+            // Unity), y "?." no la detecta y revienta en SetActive. Pasa en
+            // Deckbuild, que reutiliza esta vista sin estos dos campos.
+            if (iconoMelee != null)
+            {
+                iconoMelee.SetActive(definicion.CanAttackMelee);
+            }
+
+            if (iconoRango != null)
+            {
+                iconoRango.SetActive(definicion.CanAttackRanged);
             }
 
             if (arte == null)
@@ -186,10 +217,10 @@ namespace ManaMaster.Unity.Duelo
             }
 
             float transcurrido = 0f;
-            while (transcurrido < DuracionDeImpacto)
+            while (transcurrido < DuracionDeGolpe)
             {
                 transcurrido += Time.unscaledDeltaTime;
-                float t = Mathf.Clamp01(transcurrido / DuracionDeImpacto);
+                float t = Mathf.Clamp01(transcurrido / DuracionDeGolpe);
 
                 // Sube a mitad de camino y vuelve a la escala normal: un
                 // golpe, no un latido.
@@ -216,6 +247,52 @@ namespace ManaMaster.Unity.Duelo
             }
 
             _animacionDeImpacto = null;
+        }
+
+        /// <summary>
+        /// Embestida del atacante: se lanza una fraccion del camino hacia el
+        /// objetivo y vuelve, para que se vea un choque en vez de que solo
+        /// reaccione la carta golpeada.
+        /// </summary>
+        public void ReproducirEmbestida(Vector3 posicionObjetivoMundo)
+        {
+            if (!gameObject.activeInHierarchy)
+            {
+                return;
+            }
+
+            if (_animacionDeEmbestida != null)
+            {
+                StopCoroutine(_animacionDeEmbestida);
+                ((RectTransform)transform).anchoredPosition = _posicionAnchoredOriginal;
+            }
+
+            _animacionDeEmbestida = StartCoroutine(AnimarEmbestida(posicionObjetivoMundo));
+        }
+
+        private IEnumerator AnimarEmbestida(Vector3 posicionObjetivoMundo)
+        {
+            RectTransform rect = (RectTransform)transform;
+            Vector3 posicionOriginal = rect.position;
+            Vector3 direccion = posicionObjetivoMundo - posicionOriginal;
+
+            float distancia = Mathf.Min(
+                direccion.magnitude * FraccionDeEmbestida, DistanciaMaximaDeEmbestida);
+            Vector3 posicionEmbestida = posicionOriginal + direccion.normalized * distancia;
+
+            float transcurrido = 0f;
+            while (transcurrido < DuracionDeGolpe)
+            {
+                transcurrido += Time.unscaledDeltaTime;
+                float t = Mathf.Clamp01(transcurrido / DuracionDeGolpe);
+                float avance = Mathf.Sin(t * Mathf.PI);
+                rect.position = Vector3.Lerp(posicionOriginal, posicionEmbestida, avance);
+
+                yield return null;
+            }
+
+            rect.position = posicionOriginal;
+            _animacionDeEmbestida = null;
         }
 
         private static void Escribir(Text campo, string valor)

@@ -23,10 +23,10 @@ namespace ManaMaster.Unity.Duelo
 
         [Header("Ritmo")]
         [Tooltip("Pausa tras cada golpe o curacion.")]
-        [SerializeField, Min(0f)] private float pausaEntreGolpes = 0.35f;
+        [SerializeField, Min(0f)] private float pausaEntreGolpes = 0.4375f; // 0.35s base, 25% mas lento
 
         [Tooltip("Pausa extra al caer un monstruo, para que se vea compactar.")]
-        [SerializeField, Min(0f)] private float pausaTrasUnaMuerte = 0.55f;
+        [SerializeField, Min(0f)] private float pausaTrasUnaMuerte = 0.6875f; // 0.55s base, 25% mas lento
 
         /// <summary>Hay un combate animandose ahora mismo.</summary>
         public bool Reproduciendo { get; private set; }
@@ -100,7 +100,8 @@ namespace ManaMaster.Unity.Duelo
 
         /// <summary>
         /// "Juice" de combate: golpe de escala y numero flotante sobre la
-        /// carta que recibe el dano o la curacion de este fotograma. Es solo
+        /// carta que recibe el dano o la curacion de este fotograma, mas la
+        /// embestida del atacante contra el objetivo en un ataque. Es solo
         /// feedback visual, no cambia ninguna regla.
         /// </summary>
         private static void ReproducirImpacto(
@@ -109,9 +110,21 @@ namespace ManaMaster.Unity.Duelo
             switch (fotograma.Evento)
             {
                 case AtaqueResuelto ataque:
-                    BuscarVista(vistaAtacante, vistaDefensora, fotograma, ataque.Objetivo)
-                        ?.ReproducirImpacto(ataque.Dano, esCuracion: false);
+                {
+                    // A diferencia de CuracionAplicada, el evento ya trae los
+                    // dos carriles: no hace falta buscar la carta en la lista.
+                    VistaCartaMonstruo vistaObjetivo =
+                        vistaDefensora?.VistaEnCarril(ataque.CarrilObjetivo);
+                    vistaObjetivo?.ReproducirImpacto(ataque.Dano, esCuracion: false);
+
+                    if (vistaObjetivo != null)
+                    {
+                        vistaAtacante?.VistaEnCarril(ataque.CarrilAtacante)
+                            ?.ReproducirEmbestida(vistaObjetivo.transform.position);
+                    }
+
                     break;
+                }
 
                 case CuracionAplicada curacion:
                     BuscarVista(vistaAtacante, vistaDefensora, fotograma, curacion.Objetivo)
