@@ -17,7 +17,7 @@ MonoBehaviour:
   rarity: 1
   manaCost: 2
   maxHealth: 3
-  attack: 2
-  healPerTurn: 1
+  attack: 3
+  healPerTurn: 0
   canAttackMelee: 0
   canAttackRanged: 1
