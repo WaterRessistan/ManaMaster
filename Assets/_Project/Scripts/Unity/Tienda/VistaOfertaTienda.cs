@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using ManaMaster.Core.Util;
 using ManaMaster.Unity.Cards;
 using ManaMaster.Unity.Sesion;
@@ -30,6 +31,9 @@ namespace ManaMaster.Unity.Tienda
 
         [Tooltip("Solo hace falta si 'carta' esta vacio, para elegir las del sobre.")]
         [SerializeField] private CardCatalog catalogo;
+
+        [Tooltip("Solo se cablea en la oferta del sobre: enseña las 3 cartas al abrirlo.")]
+        [SerializeField] private ControladorAperturaDeSobre apertura;
 
         /// <summary>Sesion cableada, o null si no se cableo ninguna.</summary>
         public SesionDeJuego Sesion => sesion;
@@ -103,9 +107,15 @@ namespace ManaMaster.Unity.Tienda
             }
 
             IRandom azar = new SystemRandom(System.Environment.TickCount);
-            foreach (string cardId in GeneradorDeSobres.Abrir(catalogo, azar))
+            List<string> cardIds = GeneradorDeSobres.Abrir(catalogo, azar);
+            foreach (string cardId in cardIds)
             {
                 sesion.AnadirAColeccion(cardId);
+            }
+
+            if (apertura != null)
+            {
+                apertura.Mostrar(cardIds, catalogo);
             }
         }
     }

@@ -34,10 +34,12 @@ namespace ManaMaster.Unity.Duelo
         [SerializeField] private Text textoFlotante;
 
         [Header("Tipo de ataque")]
-        [Tooltip("Espada: se enciende si el monstruo puede atacar cuerpo a cuerpo.")]
+        [Tooltip("Espada: se enciende si el monstruo solo ataca cuerpo a cuerpo.")]
         [SerializeField] private GameObject iconoMelee;
-        [Tooltip("Flecha: se enciende si el monstruo puede atacar a distancia.")]
+        [Tooltip("Flecha: se enciende si el monstruo solo ataca a distancia.")]
         [SerializeField] private GameObject iconoRango;
+        [Tooltip("Arco y flecha cruzados: se enciende si el monstruo puede las dos cosas.")]
+        [SerializeField] private GameObject iconoHibrido;
 
         // "Juice" de combate (DESIGN.md: sin regla propia, es solo feedback
         // visual): golpe de escala + numero flotante sobre la carta afectada,
@@ -160,16 +162,24 @@ namespace ManaMaster.Unity.Duelo
 
             // Chequeo explicito, no "?.": un GameObject sin cablear en el
             // Inspector no es null de verdad (es la referencia "perdida" de
-            // Unity), y "?." no la detecta y revienta en SetActive. Pasa en
-            // Deckbuild, que reutiliza esta vista sin estos dos campos.
+            // Unity), y "?." no la detecta y revienta en SetActive.
+            bool melee = definicion.CanAttackMelee;
+            bool rango = definicion.CanAttackRanged;
+            bool hibrido = melee && rango;
+
             if (iconoMelee != null)
             {
-                iconoMelee.SetActive(definicion.CanAttackMelee);
+                iconoMelee.SetActive(melee && !hibrido);
             }
 
             if (iconoRango != null)
             {
-                iconoRango.SetActive(definicion.CanAttackRanged);
+                iconoRango.SetActive(rango && !hibrido);
+            }
+
+            if (iconoHibrido != null)
+            {
+                iconoHibrido.SetActive(hibrido);
             }
 
             if (arte == null)

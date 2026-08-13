@@ -25,7 +25,6 @@ namespace ManaMaster.Herramientas
         public const string RutaEscena = "Assets/_Project/Scenes/Deckbuild.unity";
 
         private static readonly Color ColorDeFondo = new(0.07f, 0.08f, 0.12f, 1f);
-        private static readonly Vector2 TamanoCarta = new(130f, 180f);
         private static readonly Vector2 TamanoSelector = new(150f, 250f);
         private static readonly Vector2 TamanoCartaObjeto = new(100f, 140f);
         private static readonly Vector2 TamanoSelectorDeObjeto = new(120f, 210f);
@@ -129,7 +128,8 @@ namespace ManaMaster.Herramientas
 
             SelectorDeCarta selector = raiz.gameObject.AddComponent<SelectorDeCarta>();
 
-            VistaCartaMonstruo carta = Carta(raiz.transform, new Vector2(0f, 35f));
+            VistaCartaMonstruo carta =
+                ConstructorDeCartas.Monstruo("Carta", raiz.transform, new Vector2(0f, 35f));
 
             Text copias = ConstructorDeInterfaz.Texto("Copias", raiz,
                 new Vector2(0f, -85f), new Vector2(140f, 30f), "0/2", 20);
@@ -234,40 +234,5 @@ namespace ManaMaster.Herramientas
             // en OnEnable (mismo motivo que en ConstructorDeEscenaInicio).
         }
 
-        /// <summary>Carta dibujada: fondo, arte y los cinco numeros.</summary>
-        private static VistaCartaMonstruo Carta(Transform padre, Vector2 posicion)
-        {
-            RectTransform raiz = ConstructorDeInterfaz.Panel("Carta", padre, posicion,
-                    TamanoCarta, new Color(0.15f, 0.17f, 0.24f, 1f), recibeClics: false)
-                .rectTransform;
-
-            VistaCartaMonstruo vista = raiz.gameObject.AddComponent<VistaCartaMonstruo>();
-
-            Image arte = ConstructorDeInterfaz.Panel("Arte", raiz,
-                new Vector2(0f, 18f), new Vector2(112f, 96f), Color.white,
-                recibeClics: false);
-            arte.preserveAspect = true;
-
-            Text nombreCarta = ConstructorDeInterfaz.Texto("Nombre", raiz,
-                new Vector2(0f, 76f), new Vector2(126f, 26f), "", 16);
-            Text mana = ConstructorDeInterfaz.Texto("Mana", raiz,
-                new Vector2(-48f, 76f), new Vector2(30f, 26f), "", 20);
-            Text ataque = ConstructorDeInterfaz.Texto("Ataque", raiz,
-                new Vector2(-44f, -64f), new Vector2(36f, 28f), "", 22);
-            Text cura = ConstructorDeInterfaz.Texto("Cura", raiz,
-                new Vector2(0f, -64f), new Vector2(36f, 28f), "", 22);
-            Text vida = ConstructorDeInterfaz.Texto("Vida", raiz,
-                new Vector2(44f, -64f), new Vector2(36f, 28f), "", 22);
-
-            ConstructorDeInterfaz.Cablear(vista,
-                ("nombre", nombreCarta),
-                ("ataque", ataque),
-                ("mana", mana),
-                ("cura", cura),
-                ("vida", vida),
-                ("arte", arte));
-
-            return vista;
-        }
     }
 }
