@@ -19,6 +19,9 @@ namespace ManaMaster.Unity.Duelo
         [Header("Arte")]
         [SerializeField] private Image arte;
 
+        [Tooltip("Borde de color segun la rareza. Vacio si la carta no tiene fondo propio.")]
+        [SerializeField] private Image marco;
+
         /// <summary>Objeto representado, o null si el hueco esta vacio.</summary>
         public IItemCard Objeto { get; private set; }
 
@@ -50,6 +53,11 @@ namespace ManaMaster.Unity.Duelo
             Escribir(bonusAtaque, Objeto.BonusAttack.ToString());
             Escribir(bonusVida, Objeto.BonusMaxHealth.ToString());
             Escribir(bonusCura, Objeto.BonusHealPerTurn.ToString());
+
+            if (marco != null)
+            {
+                marco.color = ColoresDeRareza.De(Objeto.Rarity);
+            }
 
             if (arte == null)
             {

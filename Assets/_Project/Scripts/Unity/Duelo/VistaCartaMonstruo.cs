@@ -27,6 +27,9 @@ namespace ManaMaster.Unity.Duelo
         [Header("Arte")]
         [SerializeField] private Image arte;
 
+        [Tooltip("Borde de color segun la rareza. Vacio si la carta no tiene fondo propio (p. ej. la mano).")]
+        [SerializeField] private Image marco;
+
         [Tooltip("Se enciende con el arte del objeto equipado, o se apaga si no lleva ninguno.")]
         [SerializeField] private Image iconoObjeto;
 
@@ -152,6 +155,11 @@ namespace ManaMaster.Unity.Duelo
             Escribir(mana, definicion.ManaCost.ToString());
             Escribir(cura, Carta.HealPerTurn.ToString());
             Escribir(vida, (_vidaForzada ?? Carta.CurrentHealth).ToString());
+
+            if (marco != null)
+            {
+                marco.color = ColoresDeRareza.De(definicion.Rarity);
+            }
 
             if (iconoObjeto != null)
             {

@@ -194,7 +194,7 @@ namespace ManaMaster.Unity.Tienda
                         MonsterCardDefinition definicion = _cartas[i];
                         filasResumen[i].gameObject.SetActive(true);
                         filasResumen[i].text = $"{definicion.DisplayName} ({Etiqueta(definicion.Rarity)})";
-                        filasResumen[i].color = ColorDeRareza(definicion.Rarity);
+                        filasResumen[i].color = ColoresDeRareza.De(definicion.Rarity);
                     }
                     else
                     {
@@ -216,16 +216,6 @@ namespace ManaMaster.Unity.Tienda
             CardRarity.Epica => "Epica",
             CardRarity.Legendaria => "Legendaria",
             _ => rareza.ToString(),
-        };
-
-        /// <summary>No habia paleta de rareza en el proyecto: se define aqui.</summary>
-        private static Color ColorDeRareza(CardRarity rareza) => rareza switch
-        {
-            CardRarity.Comun => Color.white,
-            CardRarity.Rara => new Color(0.4f, 0.65f, 1f, 1f),
-            CardRarity.Epica => new Color(0.7f, 0.4f, 0.95f, 1f),
-            CardRarity.Legendaria => new Color(1f, 0.8f, 0.2f, 1f),
-            _ => Color.white,
         };
     }
 }

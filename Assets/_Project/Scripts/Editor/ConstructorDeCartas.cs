@@ -1,3 +1,5 @@
+using ManaMaster.Core.Cards;
+using ManaMaster.Unity.Cards;
 using ManaMaster.Unity.Duelo;
 using UnityEngine;
 using UnityEngine.UI;
@@ -5,18 +7,20 @@ using UnityEngine.UI;
 namespace ManaMaster.Herramientas
 {
     /// <summary>
-    /// Dibuja el cuerpo visual de una carta de monstruo desde codigo.
+    /// Dibuja el cuerpo visual de una carta (de monstruo o de objeto) desde codigo.
     /// </summary>
     /// <remarks>
     /// Antes vivia por separado y casi identico en
-    /// <c>ConstructorDeEscenaDuelo</c> y <c>ConstructorDeEscenaDeckbuild</c>.
-    /// Con la Tienda sumandose como tercer sitio que necesita el mismo
-    /// indicador de tipo de ataque, triplicar el dibujado ya no compensaba:
-    /// las tres pantallas llaman a <see cref="Monstruo"/>.
+    /// <c>ConstructorDeEscenaDuelo</c>, <c>ConstructorDeEscenaDeckbuild</c> y
+    /// <c>ConstructorDeEscenaTienda</c>. Triplicar (y ahora cuadruplicar, con
+    /// la Coleccion) el dibujado ya no compensaba: las cuatro pantallas llaman
+    /// a <see cref="Monstruo"/> y <see cref="Objeto"/>.
     /// </remarks>
     public static class ConstructorDeCartas
     {
         private static readonly Vector2 TamanoCarta = new(130f, 180f);
+        private static readonly Vector2 TamanoCartaObjeto = new(100f, 140f);
+        private static readonly Color ColorDeFondo = new(0.15f, 0.17f, 0.24f, 1f);
 
         /// <summary>Carta dibujada: fondo, arte, los cinco numeros y el indicador de ataque.</summary>
         public static VistaCartaMonstruo Monstruo(
@@ -24,9 +28,22 @@ namespace ManaMaster.Herramientas
         {
             RectTransform raiz = conFondo
                 ? ConstructorDeInterfaz.Panel(nombre, padre, posicion, TamanoCarta,
-                    new Color(0.15f, 0.17f, 0.24f, 1f), recibeClics: false)
+                    ColoresDeRareza.De(CardRarity.Comun), recibeClics: false)
                     .rectTransform
                 : ConstructorDeInterfaz.Nodo(nombre, padre, posicion, TamanoCarta);
+
+            // El marco (el propio fondo, coloreado por rareza en Refrescar) y
+            // un "Fondo" interior mas pequeno encima, para que se vea como un
+            // borde de color alrededor de la cara oscura de la carta. Solo
+            // tiene sentido si esta carta tiene fondo propio: la mano de
+            // Duelo ya vive dentro de un hueco con su propio color.
+            Image marco = null;
+            if (conFondo)
+            {
+                marco = raiz.GetComponent<Image>();
+                ConstructorDeInterfaz.Panel("Fondo", raiz, Vector2.zero,
+                    TamanoCarta - new Vector2(8f, 8f), ColorDeFondo, recibeClics: false);
+            }
 
             VistaCartaMonstruo vista =
                 raiz.gameObject.AddComponent<VistaCartaMonstruo>();
@@ -76,6 +93,7 @@ namespace ManaMaster.Herramientas
                 ("cura", cura),
                 ("vida", vida),
                 ("arte", arte),
+                ("marco", marco),
                 ("iconoObjeto", iconoObjeto),
                 ("textoFlotante", textoFlotante),
                 ("iconoMelee", iconoMelee.gameObject),
@@ -85,6 +103,51 @@ namespace ManaMaster.Herramientas
             // El corazon no tiene campo en VistaCartaMonstruo: no hay logica
             // condicional, siempre esta encendido bajo la vida.
             iconoCorazon.gameObject.SetActive(true);
+
+            return vista;
+        }
+
+        /// <summary>Carta de objeto dibujada: fondo, arte y los tres bonus.</summary>
+        public static VistaCartaObjeto Objeto(
+            string nombre, Transform padre, Vector2 posicion, bool conFondo = true)
+        {
+            RectTransform raiz = conFondo
+                ? ConstructorDeInterfaz.Panel(nombre, padre, posicion, TamanoCartaObjeto,
+                    ColoresDeRareza.De(CardRarity.Comun), recibeClics: false)
+                    .rectTransform
+                : ConstructorDeInterfaz.Nodo(nombre, padre, posicion, TamanoCartaObjeto);
+
+            Image marco = null;
+            if (conFondo)
+            {
+                marco = raiz.GetComponent<Image>();
+                ConstructorDeInterfaz.Panel("Fondo", raiz, Vector2.zero,
+                    TamanoCartaObjeto - new Vector2(6f, 6f), ColorDeFondo, recibeClics: false);
+            }
+
+            VistaCartaObjeto vista = raiz.gameObject.AddComponent<VistaCartaObjeto>();
+
+            Image arte = ConstructorDeInterfaz.Panel("Arte", raiz,
+                new Vector2(0f, 24f), new Vector2(80f, 56f), Color.white,
+                recibeClics: false);
+            arte.preserveAspect = true;
+
+            Text nombreObjeto = ConstructorDeInterfaz.Texto("Nombre", raiz,
+                new Vector2(0f, 58f), new Vector2(96f, 22f), "", 12);
+            Text bonusAtaque = ConstructorDeInterfaz.Texto("BonusAtaque", raiz,
+                new Vector2(-28f, -50f), new Vector2(28f, 20f), "", 14);
+            Text bonusVida = ConstructorDeInterfaz.Texto("BonusVida", raiz,
+                new Vector2(0f, -50f), new Vector2(28f, 20f), "", 14);
+            Text bonusCura = ConstructorDeInterfaz.Texto("BonusCura", raiz,
+                new Vector2(28f, -50f), new Vector2(28f, 20f), "", 14);
+
+            ConstructorDeInterfaz.Cablear(vista,
+                ("nombre", nombreObjeto),
+                ("bonusAtaque", bonusAtaque),
+                ("bonusVida", bonusVida),
+                ("bonusCura", bonusCura),
+                ("arte", arte),
+                ("marco", marco));
 
             return vista;
         }
