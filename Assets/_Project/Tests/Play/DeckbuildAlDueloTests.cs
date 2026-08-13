@@ -76,7 +76,7 @@ namespace ManaMaster.PlayTests
                 $"objetos {controlador.TotalObjetos}/{ConstructorDeMazos.CartasPorMazoDeObjetos}");
 
             controlador.Guardar();
-            yield return null;
+            yield return EsperarCambioDeEscena("Inicio");
 
             Assert.That(SceneManager.GetActiveScene().name, Is.EqualTo("Inicio"),
                 "guardar el mazo deberia volver al menu");
@@ -166,6 +166,21 @@ namespace ManaMaster.PlayTests
         {
             yield return SceneManager.LoadSceneAsync(nombre, LoadSceneMode.Single);
             yield return null;
+        }
+
+        /// <summary>
+        /// La navegacion pasa por un fundido antes de cargar la escena de
+        /// verdad (ver <c>ManaMaster.Unity.Navegacion.Navegador</c>), asi que
+        /// ya no basta con esperar un solo fotograma tras pulsar "Guardar".
+        /// </summary>
+        private static IEnumerator EsperarCambioDeEscena(string escenaDestino)
+        {
+            float limite = Time.realtimeSinceStartup + 5f;
+            while (SceneManager.GetActiveScene().name != escenaDestino
+                   && Time.realtimeSinceStartup < limite)
+            {
+                yield return null;
+            }
         }
     }
 }

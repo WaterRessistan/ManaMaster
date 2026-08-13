@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
 using ManaMaster.Unity.Cards;
+using ManaMaster.Unity.Navegacion;
 using ManaMaster.Unity.Sesion;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 
 namespace ManaMaster.Unity.Deckbuild
 {
@@ -161,7 +161,7 @@ namespace ManaMaster.Unity.Deckbuild
 
             sesion.FijarMazoHumano(_elegidas);
             sesion.FijarMazoObjetos(_elegidasObjetos);
-            SceneManager.LoadScene("Inicio");
+            Navegador.Ir("Inicio");
         }
     }
 }

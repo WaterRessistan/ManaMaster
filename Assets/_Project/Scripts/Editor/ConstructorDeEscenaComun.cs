@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using ManaMaster.Unity.Navegacion;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -8,12 +9,13 @@ using UnityEngine.UI;
 namespace ManaMaster.Herramientas
 {
     /// <summary>
-    /// Piezas comunes a los cuatro constructores de escena.
+    /// Piezas comunes a los constructores de escena.
     /// </summary>
     /// <remarks>
-    /// Camara, EventSystem, Canvas base y el alta en Build Settings son
-    /// identicos en Inicio, Tienda, Deckbuild y Duelo: vivian duplicados solo
-    /// en <c>ConstructorDeEscenaDuelo</c> porque era la unica escena.
+    /// Camara, EventSystem, Canvas base, el fundido entre escenas y el alta
+    /// en Build Settings son identicos en las cinco escenas: vivian
+    /// duplicados solo en <c>ConstructorDeEscenaDuelo</c> cuando era la
+    /// unica.
     /// </remarks>
     public static class ConstructorDeEscenaComun
     {
@@ -22,7 +24,7 @@ namespace ManaMaster.Herramientas
 
         /// <summary>
         /// Orden fijo en Build Settings, con Inicio siempre en el indice 0
-        /// porque es la escena de arranque. Regenerar cualquiera de las 4 en
+        /// porque es la escena de arranque. Regenerar cualquiera de las 5 en
         /// cualquier orden no debe desplazarla.
         /// </summary>
         private static readonly string[] OrdenCanonico =
@@ -30,6 +32,7 @@ namespace ManaMaster.Herramientas
             "Assets/_Project/Scenes/Inicio.unity",
             "Assets/_Project/Scenes/Tienda.unity",
             "Assets/_Project/Scenes/Deckbuild.unity",
+            "Assets/_Project/Scenes/Coleccion.unity",
             "Assets/_Project/Scenes/Duelo.unity",
         };
 
@@ -73,6 +76,28 @@ namespace ManaMaster.Herramientas
             escalador.matchWidthOrHeight = 0.5f;
 
             return lienzo;
+        }
+
+        /// <summary>
+        /// Velo de fundido entre pantallas. Ultimo hijo del lienzo para que
+        /// quede por encima de todo lo demas que se construya despues.
+        /// </summary>
+        public static void Transicion(Canvas lienzo)
+        {
+            GameObject objeto = new("Transicion",
+                typeof(RectTransform), typeof(CanvasRenderer), typeof(Image),
+                typeof(CanvasGroup), typeof(VistaTransicionDePantalla));
+
+            RectTransform rect = (RectTransform)objeto.transform;
+            rect.SetParent(lienzo.transform, worldPositionStays: false);
+            rect.anchorMin = Vector2.zero;
+            rect.anchorMax = Vector2.one;
+            rect.offsetMin = Vector2.zero;
+            rect.offsetMax = Vector2.zero;
+
+            Image imagen = objeto.GetComponent<Image>();
+            imagen.color = Color.black;
+            imagen.raycastTarget = true;
         }
 
         /// <summary>

@@ -42,7 +42,7 @@ namespace ManaMaster.PlayTests
             Assert.That(volver, Is.Not.Null, "Duelo no tiene boton de volver al menu");
 
             volver.Ir();
-            yield return null;
+            yield return EsperarCambioDeEscena("Inicio");
 
             Assert.That(SceneManager.GetActiveScene().name, Is.EqualTo("Inicio"));
         }
@@ -56,9 +56,24 @@ namespace ManaMaster.PlayTests
                 $"'{escenaOrigen}' no tiene un boton que lleve a '{escenaDestino}'");
 
             boton.Ir();
-            yield return null;
+            yield return EsperarCambioDeEscena(escenaDestino);
 
             Assert.That(SceneManager.GetActiveScene().name, Is.EqualTo(escenaDestino));
+        }
+
+        /// <summary>
+        /// La navegacion pasa por un fundido de
+        /// <see cref="VistaTransicionDePantalla"/> antes de cargar la escena
+        /// de verdad, asi que ya no basta con esperar un solo fotograma.
+        /// </summary>
+        private static IEnumerator EsperarCambioDeEscena(string escenaDestino)
+        {
+            float limite = Time.realtimeSinceStartup + 5f;
+            while (SceneManager.GetActiveScene().name != escenaDestino
+                   && Time.realtimeSinceStartup < limite)
+            {
+                yield return null;
+            }
         }
 
         private static BotonDeNavegacion BuscarPorDestino(string nombreEscena)
