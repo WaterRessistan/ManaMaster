@@ -192,6 +192,12 @@ namespace ManaMaster.Core.Match
         /// (DESIGN.md §4). El hueco de la mano se rellena al momento desde el
         /// mazo, igual que al desplegar un monstruo.
         /// </summary>
+        /// <remarks>
+        /// Las pociones (<see cref="IItemCard.EsPocion"/>) no pasan por
+        /// <see cref="CardInstance.TryEquip"/>: se aplican con
+        /// <see cref="CardInstance.UsarPocion"/>, que no ocupa el hueco de
+        /// objeto y por eso nunca falla con <see cref="ResultadoEquipar.YaLlevaObjeto"/>.
+        /// </remarks>
         public ResultadoEquipar TryEquipar(int huecoManoObjeto, int carril)
         {
             IItemCard objeto = ManoDeObjetos[huecoManoObjeto];
@@ -206,7 +212,11 @@ namespace ManaMaster.Core.Match
                 return ResultadoEquipar.CarrilVacio;
             }
 
-            if (!monstruo.TryEquip(objeto))
+            bool aplicado = objeto.EsPocion
+                ? monstruo.UsarPocion(objeto)
+                : monstruo.TryEquip(objeto);
+
+            if (!aplicado)
             {
                 return ResultadoEquipar.YaLlevaObjeto;
             }

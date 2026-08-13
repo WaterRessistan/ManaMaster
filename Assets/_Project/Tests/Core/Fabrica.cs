@@ -33,14 +33,16 @@ namespace ManaMaster.Core.Tests
 
         /// <summary>Un objeto con nombre y bonus, para poder seguirlo en los tests.</summary>
         public static IItemCard Objeto(
-            string nombre, int bonusAtaque = 0, int bonusVida = 0, int bonusCura = 0)
+            string nombre, int bonusAtaque = 0, int bonusVida = 0, int bonusCura = 0,
+            bool pocion = false)
             => new ObjetoDePrueba
             {
                 CardId = nombre,
                 DisplayName = nombre,
                 BonusAttack = bonusAtaque,
                 BonusMaxHealth = bonusVida,
-                BonusHealPerTurn = bonusCura
+                BonusHealPerTurn = bonusCura,
+                EsPocion = pocion
             };
 
         /// <summary>Mazo con los monstruos dados, en ese orden.</summary>

@@ -271,5 +271,58 @@ namespace ManaMaster.Core.Tests
             Assert.That(jugador.Arena[0].EquippedItem?.CardId, Is.EqualTo("Espada"),
                 "el primer objeto no se sustituye");
         }
+
+        // ------------------------------------------------------------------
+        // Pociones (DESIGN.md §4)
+        // ------------------------------------------------------------------
+
+        [Test]
+        public void UnaPocionNoOcupaElHuecoDeObjetoNiFallaConYaLlevaObjeto()
+        {
+            PlayerState jugador = Fabrica.Jugador("Ana", Fabrica.Monstruo("Bruto", vida: 5));
+            jugador.IniciarObjetos(Fabrica.MazoDeObjetos(
+                Fabrica.Objeto("Espada", bonusAtaque: 1),
+                Fabrica.Objeto("Pocion", bonusVida: 2, pocion: true)));
+
+            // El monstruo ya lleva un objeto normal: si la pocion pasara por
+            // el mismo camino que TryEquip, fallaria con YaLlevaObjeto.
+            jugador.TryEquipar(huecoManoObjeto: 0, carril: 0);
+            ResultadoEquipar resultado = jugador.TryEquipar(huecoManoObjeto: 1, carril: 0);
+
+            Assert.That(resultado, Is.EqualTo(ResultadoEquipar.Ok),
+                "una pocion nunca deberia fallar con YaLlevaObjeto");
+            Assert.That(jugador.Arena[0].EquippedItem?.CardId, Is.EqualTo("Espada"),
+                "la pocion no toca el objeto ya equipado");
+        }
+
+        [Test]
+        public void UnaPocionYUnObjetoNormalConvivenEnCualquierOrden()
+        {
+            PlayerState jugador = Fabrica.Jugador("Ana", Fabrica.Monstruo("Bruto", vida: 5));
+            jugador.IniciarObjetos(Fabrica.MazoDeObjetos(
+                Fabrica.Objeto("Pocion", bonusVida: 2, pocion: true),
+                Fabrica.Objeto("Espada", bonusAtaque: 1)));
+
+            jugador.TryEquipar(huecoManoObjeto: 0, carril: 0);   // pocion primero
+            ResultadoEquipar resultado = jugador.TryEquipar(huecoManoObjeto: 1, carril: 0); // objeto normal despues
+
+            Assert.That(resultado, Is.EqualTo(ResultadoEquipar.Ok));
+            Assert.That(jugador.Arena[0].EquippedItem?.CardId, Is.EqualTo("Espada"),
+                "la pocion no ocupo el hueco de objeto, asi que el objeto normal se puede equipar despues");
+            Assert.That(jugador.Arena[0].MaxHealth, Is.EqualTo(7));
+        }
+
+        [Test]
+        public void ManoDeObjetosSeSigueRellenandoAlUsarUnaPocion()
+        {
+            PlayerState jugador = Fabrica.Jugador("Ana", Fabrica.Monstruo("Bruto", vida: 5));
+            jugador.IniciarObjetos(Fabrica.MazoDeObjetos(
+                Fabrica.Objeto("Pocion", bonusVida: 2, pocion: true), Fabrica.Objeto("Escudo"), Fabrica.Objeto("Amuleto")));
+
+            jugador.TryEquipar(huecoManoObjeto: 0, carril: 0);
+
+            Assert.That(jugador.ManoDeObjetos.Count, Is.EqualTo(2), "el hueco se rellena al momento");
+            Assert.That(jugador.MazoDeObjetos.Count, Is.EqualTo(0));
+        }
     }
 }

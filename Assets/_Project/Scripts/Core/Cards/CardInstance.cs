@@ -27,6 +27,13 @@ namespace ManaMaster.Core.Cards
         /// </summary>
         public IItemCard EquippedItem { get; private set; }
 
+        /// <summary>
+        /// Vida maxima extra acumulada por pociones (DESIGN.md §4): a
+        /// diferencia de <see cref="EquippedItem"/>, no tiene tope de usos y
+        /// no ocupa ningun hueco.
+        /// </summary>
+        private int _bonusVidaDePociones;
+
         public CardInstance(IMonsterCard definition)
         {
             Definition = definition
@@ -34,7 +41,9 @@ namespace ManaMaster.Core.Cards
             CurrentHealth = definition.MaxHealth;
         }
 
-        public int MaxHealth => Definition.MaxHealth + (EquippedItem?.BonusMaxHealth ?? 0);
+        public int MaxHealth => Definition.MaxHealth
+            + (EquippedItem?.BonusMaxHealth ?? 0)
+            + _bonusVidaDePociones;
         public int Attack => Definition.Attack + (EquippedItem?.BonusAttack ?? 0);
         public int HealPerTurn => Definition.HealPerTurn + (EquippedItem?.BonusHealPerTurn ?? 0);
         public int SacrificeManaValue => Definition.SacrificeManaValue;
@@ -84,6 +93,29 @@ namespace ManaMaster.Core.Cards
 
             EquippedItem = item;
             CurrentHealth += item.BonusMaxHealth;
+            return true;
+        }
+
+        /// <summary>
+        /// Aplica una pocion (DESIGN.md §4): a diferencia de
+        /// <see cref="TryEquip"/>, no comprueba ni toca
+        /// <see cref="EquippedItem"/>, no tiene tope de usos y solo falla si
+        /// el monstruo ya esta fuera de combate.
+        /// </summary>
+        public bool UsarPocion(IItemCard pocion)
+        {
+            if (pocion == null)
+            {
+                throw new ArgumentNullException(nameof(pocion));
+            }
+
+            if (!IsAlive)
+            {
+                return false;
+            }
+
+            _bonusVidaDePociones += pocion.BonusMaxHealth;
+            CurrentHealth += pocion.BonusMaxHealth;
             return true;
         }
 

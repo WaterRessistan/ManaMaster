@@ -16,7 +16,9 @@ MonoBehaviour:
   artwork: {fileID: 0}
   rarity: 0
   manaCost: 1
-  effectDescription: '+2 a la vida maxima del monstruo que lo lleve.'
+  effectDescription: '+2 a la vida maxima del monstruo que lo lleve. Es una
+    pocion: no ocupa su hueco de objeto.'
   bonusAttack: 0
   bonusMaxHealth: 2
   bonusHealPerTurn: 0
+  esPocion: 1

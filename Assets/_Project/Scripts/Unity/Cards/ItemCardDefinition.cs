@@ -26,10 +26,16 @@ namespace ManaMaster.Unity.Cards
         [SerializeField] private int bonusMaxHealth;
         [SerializeField] private int bonusHealPerTurn;
 
+        [Tooltip("Si esta marcado, no ocupa el hueco de objeto del monstruo: " +
+                 "se aplica al momento y no bloquea ni se ve bloqueado por un " +
+                 "objeto normal (DESIGN.md §4).")]
+        [SerializeField] private bool esPocion;
+
         public string EffectDescription => effectDescription;
 
         public int BonusAttack => bonusAttack;
         public int BonusMaxHealth => bonusMaxHealth;
         public int BonusHealPerTurn => bonusHealPerTurn;
+        public bool EsPocion => esPocion;
     }
 }

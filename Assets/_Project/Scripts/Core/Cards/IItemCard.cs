@@ -17,5 +17,12 @@ namespace ManaMaster.Core.Cards
         int BonusMaxHealth { get; }
 
         int BonusHealPerTurn { get; }
+
+        /// <summary>
+        /// Si es una pocion: se aplica al momento sin ocupar el hueco de
+        /// objeto del monstruo (DESIGN.md §4), asi que no compite con
+        /// <see cref="CardInstance.EquippedItem"/> ni se ve bloqueada por el.
+        /// </summary>
+        bool EsPocion { get; }
     }
 }

@@ -219,6 +219,68 @@ namespace ManaMaster.Core.Tests
             Assert.That(() => monstruo.TryEquip(null), Throws.ArgumentNullException);
         }
 
+        // ------------------------------------------------------------------
+        // Pociones (DESIGN.md §4)
+        // ------------------------------------------------------------------
+
+        [Test]
+        public void UnaPocionSubeLaVidaMaximaYLaActualAlMomento()
+        {
+            CardInstance monstruo = new(new CartaDePrueba { MaxHealth = 5 });
+            monstruo.ReceiveDamage(3);
+
+            bool aplicada = monstruo.UsarPocion(Fabrica.Objeto("Pocion", bonusVida: 2, pocion: true));
+
+            Assert.That(aplicada, Is.True);
+            Assert.That(monstruo.MaxHealth, Is.EqualTo(7));
+            Assert.That(monstruo.CurrentHealth, Is.EqualTo(4), "sube tanto como la vida maxima, no llena del todo");
+        }
+
+        [Test]
+        public void DosPocionesSeguidasSeAcumulan()
+        {
+            CardInstance monstruo = new(new CartaDePrueba { MaxHealth = 5 });
+
+            monstruo.UsarPocion(Fabrica.Objeto("Pocion", bonusVida: 2, pocion: true));
+            monstruo.UsarPocion(Fabrica.Objeto("Pocion", bonusVida: 3, pocion: true));
+
+            Assert.That(monstruo.MaxHealth, Is.EqualTo(10));
+            Assert.That(monstruo.CurrentHealth, Is.EqualTo(10));
+        }
+
+        [Test]
+        public void UnaPocionNoHaceFaltaQueElMonstruoLlevaraObjetoNiLoImpide()
+        {
+            CardInstance monstruo = new(new CartaDePrueba { MaxHealth = 5 });
+            IItemCard objeto = Fabrica.Objeto("Espada", bonusAtaque: 1);
+
+            Assert.That(monstruo.TryEquip(objeto), Is.True);
+            Assert.That(monstruo.UsarPocion(Fabrica.Objeto("Pocion", bonusVida: 2, pocion: true)), Is.True);
+
+            Assert.That(monstruo.EquippedItem, Is.SameAs(objeto), "la pocion no toca el objeto equipado");
+            Assert.That(monstruo.MaxHealth, Is.EqualTo(7));
+        }
+
+        [Test]
+        public void UnaPocionSobreUnMonstruoMuertoNoHaceNada()
+        {
+            CardInstance monstruo = new(new CartaDePrueba { MaxHealth = 5 });
+            monstruo.ReceiveDamage(5);
+
+            bool aplicada = monstruo.UsarPocion(Fabrica.Objeto("Pocion", bonusVida: 2, pocion: true));
+
+            Assert.That(aplicada, Is.False);
+            Assert.That(monstruo.MaxHealth, Is.EqualTo(5));
+        }
+
+        [Test]
+        public void UnaPocionSinObjetoEsUnError()
+        {
+            CardInstance monstruo = new(new CartaDePrueba());
+
+            Assert.That(() => monstruo.UsarPocion(null), Throws.ArgumentNullException);
+        }
+
         /// <summary>
         /// DESIGN.md §7: el sacrificio devuelve la mitad del coste redondeando
         /// hacia abajo, asi que una carta de coste 1 no devuelve nada. Es un

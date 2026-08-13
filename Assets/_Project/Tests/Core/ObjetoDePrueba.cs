@@ -16,6 +16,7 @@ namespace ManaMaster.Core.Tests
         public int BonusAttack { get; set; }
         public int BonusMaxHealth { get; set; }
         public int BonusHealPerTurn { get; set; }
+        public bool EsPocion { get; set; }
 
         public int SacrificeManaValue => 0;
     }
