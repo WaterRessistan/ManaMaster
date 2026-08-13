@@ -338,11 +338,11 @@ tocar.
 ## 13. Puntos abiertos
 
 - Precio y contenido exactos de los sobres (valores provisionales en §10).
-- Reparto de rarezas del set de cartas actual. Hoy hay 9 monstruos (4 comunes,
-  4 raras, 0 épicas, 1 legendaria) y 5 cartas de objeto (2 comunes, 2 raras,
-  1 épica): el mazo de 10+10 del §8 ya se puede construir (con alguna carta
-  repetida hasta el máximo de 2 copias), pero con poca variedad — ampliar el
-  roster sigue siendo trabajo de la Fase 6.
+- Reparto de rarezas del set de cartas actual. Hoy hay 13 monstruos (5 comunes,
+  5 raras, 2 épicas, 1 legendaria) y 7 cartas de objeto (2 comunes, 3 raras,
+  1 épica, 1 legendaria): el mazo de 10+10 del §8 ya se puede construir con
+  variedad razonable. Las estadísticas siguen siendo provisionales,
+  pendientes de una pasada de balanceo real con partidas jugadas.
 - Arte definitivo de la carta: la plantilla actual es provisional.
 
 > Resuelto y movido al §3: el drag & drop **sí** elige posición de inserción,
