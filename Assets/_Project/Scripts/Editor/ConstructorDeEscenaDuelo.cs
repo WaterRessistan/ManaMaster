@@ -425,6 +425,12 @@ namespace ManaMaster.Herramientas
             iconoObjeto.preserveAspect = true;
             iconoObjeto.enabled = false;
 
+            // Numero flotante del "juice" de combate. Oculto hasta que
+            // VistaCartaMonstruo.ReproducirImpacto lo encienda.
+            Text textoFlotante = ConstructorDeInterfaz.Texto("TextoFlotante", raiz,
+                new Vector2(0f, 18f), new Vector2(120f, 40f), "", 26);
+            textoFlotante.gameObject.SetActive(false);
+
             ConstructorDeInterfaz.Cablear(vista,
                 ("nombre", nombreCarta),
                 ("ataque", ataque),
@@ -432,7 +438,8 @@ namespace ManaMaster.Herramientas
                 ("cura", cura),
                 ("vida", vida),
                 ("arte", arte),
-                ("iconoObjeto", iconoObjeto));
+                ("iconoObjeto", iconoObjeto),
+                ("textoFlotante", textoFlotante));
 
             return vista;
         }

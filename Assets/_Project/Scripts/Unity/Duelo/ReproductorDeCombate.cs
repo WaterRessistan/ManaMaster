@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using ManaMaster.Core.Cards;
 using ManaMaster.Core.Combat;
 using UnityEngine;
 
@@ -93,6 +94,59 @@ namespace ManaMaster.Unity.Duelo
                 vistaDefensora.MostrarFotograma(
                     fotograma.ArenaDefensora, fotograma.Vidas);
             }
+
+            ReproducirImpacto(vistaAtacante, vistaDefensora, fotograma);
+        }
+
+        /// <summary>
+        /// "Juice" de combate: golpe de escala y numero flotante sobre la
+        /// carta que recibe el dano o la curacion de este fotograma. Es solo
+        /// feedback visual, no cambia ninguna regla.
+        /// </summary>
+        private static void ReproducirImpacto(
+            VistaArena vistaAtacante, VistaArena vistaDefensora, FotogramaCombate fotograma)
+        {
+            switch (fotograma.Evento)
+            {
+                case AtaqueResuelto ataque:
+                    BuscarVista(vistaAtacante, vistaDefensora, fotograma, ataque.Objetivo)
+                        ?.ReproducirImpacto(ataque.Dano, esCuracion: false);
+                    break;
+
+                case CuracionAplicada curacion:
+                    BuscarVista(vistaAtacante, vistaDefensora, fotograma, curacion.Objetivo)
+                        ?.ReproducirImpacto(curacion.Cantidad, esCuracion: true);
+                    break;
+            }
+        }
+
+        private static VistaCartaMonstruo BuscarVista(
+            VistaArena vistaAtacante,
+            VistaArena vistaDefensora,
+            FotogramaCombate fotograma,
+            CardInstance objetivo)
+        {
+            int carrilAtacante = IndiceDe(fotograma.ArenaAtacante, objetivo);
+            if (carrilAtacante >= 0)
+            {
+                return vistaAtacante?.VistaEnCarril(carrilAtacante);
+            }
+
+            int carrilDefensora = IndiceDe(fotograma.ArenaDefensora, objetivo);
+            return carrilDefensora >= 0 ? vistaDefensora?.VistaEnCarril(carrilDefensora) : null;
+        }
+
+        private static int IndiceDe(IReadOnlyList<CardInstance> arena, CardInstance objetivo)
+        {
+            for (int i = 0; i < arena.Count; i++)
+            {
+                if (ReferenceEquals(arena[i], objetivo))
+                {
+                    return i;
+                }
+            }
+
+            return -1;
         }
 
         private float PausaDe(EventoCombate evento)

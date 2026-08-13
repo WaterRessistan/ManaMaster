@@ -107,6 +107,10 @@ namespace ManaMaster.Unity.Duelo
             }
         }
 
+        /// <summary>Vista de un carril concreto, o null si esta fuera de rango.</summary>
+        public VistaCartaMonstruo VistaEnCarril(int carril)
+            => carril >= 0 && carril < carriles.Length ? carriles[carril]?.Vista : null;
+
         /// <summary>
         /// Enciende la marca en los carriles donde la carta que se esta
         /// arrastrando puede entrar: de 0 a (ocupados), sin dejar huecos

@@ -1,3 +1,4 @@
+using System.Collections;
 using ManaMaster.Core.Cards;
 using ManaMaster.Unity.Cards;
 using UnityEngine;
@@ -29,6 +30,21 @@ namespace ManaMaster.Unity.Duelo
         [Tooltip("Se enciende con el arte del objeto equipado, o se apaga si no lleva ninguno.")]
         [SerializeField] private Image iconoObjeto;
 
+        [Tooltip("Numero flotante que sube y se desvanece con cada golpe o curacion. Oculto hasta que se usa.")]
+        [SerializeField] private Text textoFlotante;
+
+        // "Juice" de combate (DESIGN.md: sin regla propia, es solo feedback
+        // visual): golpe de escala + numero flotante sobre la carta afectada.
+        private const float DuracionDeImpacto = 0.35f;
+        private const float EscalaMaximaDeImpacto = 1.18f;
+        private const float DistanciaFlotante = 40f;
+
+        private static readonly Color ColorDeCuracion = new(0.35f, 0.9f, 0.4f, 1f);
+        private static readonly Color ColorDeDano = new(0.95f, 0.3f, 0.3f, 1f);
+
+        private Vector2 _posicionInicialFlotante;
+        private Coroutine _animacionDeImpacto;
+
         /// <summary>
         /// Vida a mostrar en lugar de la actual, o null para usar la real.
         /// </summary>
@@ -38,6 +54,14 @@ namespace ManaMaster.Unity.Duelo
         /// hay que poder pintar una vida pasada.
         /// </remarks>
         private int? _vidaForzada;
+
+        private void Awake()
+        {
+            if (textoFlotante != null)
+            {
+                _posicionInicialFlotante = textoFlotante.rectTransform.anchoredPosition;
+            }
+        }
 
         /// <summary>Carta representada, o null si el hueco esta vacio.</summary>
         public CardInstance Carta { get; private set; }
@@ -74,6 +98,17 @@ namespace ManaMaster.Unity.Duelo
         {
             Carta = null;
             _vidaForzada = null;
+
+            // Desactivar el GameObject para una corrutina de impacto en marcha
+            // (Unity la corta sola), pero sin resetear la escala se quedaria
+            // a medio golpe la proxima vez que se muestre esta carta.
+            _animacionDeImpacto = null;
+            transform.localScale = Vector3.one;
+            if (textoFlotante != null)
+            {
+                textoFlotante.gameObject.SetActive(false);
+            }
+
             gameObject.SetActive(false);
         }
 
@@ -116,6 +151,71 @@ namespace ManaMaster.Unity.Duelo
             Sprite dibujo = (definicion as CardDefinition)?.Artwork;
             arte.sprite = dibujo;
             arte.enabled = dibujo != null;
+        }
+
+        /// <summary>
+        /// Golpe de escala y numero flotante sobre esta carta, para que un
+        /// ataque o una curacion se note ademas de leerse en la vida.
+        /// </summary>
+        /// <param name="cantidad">Dano o curacion aplicados. Si es 0 no hace nada.</param>
+        public void ReproducirImpacto(int cantidad, bool esCuracion)
+        {
+            if (cantidad == 0 || !gameObject.activeInHierarchy)
+            {
+                return;
+            }
+
+            if (_animacionDeImpacto != null)
+            {
+                StopCoroutine(_animacionDeImpacto);
+            }
+
+            _animacionDeImpacto = StartCoroutine(AnimarImpacto(cantidad, esCuracion));
+        }
+
+        private IEnumerator AnimarImpacto(int cantidad, bool esCuracion)
+        {
+            Vector3 escalaOriginal = transform.localScale;
+
+            if (textoFlotante != null)
+            {
+                textoFlotante.text = (esCuracion ? "+" : "-") + Mathf.Abs(cantidad);
+                textoFlotante.color = esCuracion ? ColorDeCuracion : ColorDeDano;
+                textoFlotante.rectTransform.anchoredPosition = _posicionInicialFlotante;
+                textoFlotante.gameObject.SetActive(true);
+            }
+
+            float transcurrido = 0f;
+            while (transcurrido < DuracionDeImpacto)
+            {
+                transcurrido += Time.unscaledDeltaTime;
+                float t = Mathf.Clamp01(transcurrido / DuracionDeImpacto);
+
+                // Sube a mitad de camino y vuelve a la escala normal: un
+                // golpe, no un latido.
+                float golpe = Mathf.Sin(t * Mathf.PI);
+                transform.localScale = escalaOriginal * (1f + (EscalaMaximaDeImpacto - 1f) * golpe);
+
+                if (textoFlotante != null)
+                {
+                    textoFlotante.rectTransform.anchoredPosition =
+                        _posicionInicialFlotante + Vector2.up * (DistanciaFlotante * t);
+
+                    Color color = textoFlotante.color;
+                    color.a = 1f - t;
+                    textoFlotante.color = color;
+                }
+
+                yield return null;
+            }
+
+            transform.localScale = escalaOriginal;
+            if (textoFlotante != null)
+            {
+                textoFlotante.gameObject.SetActive(false);
+            }
+
+            _animacionDeImpacto = null;
         }
 
         private static void Escribir(Text campo, string valor)
